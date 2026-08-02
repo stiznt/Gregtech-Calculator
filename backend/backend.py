@@ -3,9 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dataclasses import dataclass
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-
+from db import Database
+from dtypes import Recipe
 app = FastAPI()
+db = Database()
+
 
 origins = [
     "http://localhost",
@@ -26,16 +28,7 @@ app.mount("/static", StaticFiles(directory="/home/stiznt/gt_python/frontend", ht
 async def main():
     return FileResponse("/home/stiznt/gt_python/frontend/index.html")
 
-class Recipe(BaseModel):
-    name: str = Field(alias="recipeName")
-    group: str = Field(alias="recipeGroup")
-    type: str = Field(alias="recipeType")
-    duration: int = Field(alias="recipeDuration")
-    tier: int = Field(alias="recipeTier")
-    energy: int = Field(alias="recipeEnergy")
-    inputs: dict[str, int] = Field(alias="recipeInputs")
-    outputs: dict[str, list[int, float]] = Field(alias="recipeOutputs")
-
 @app.post("/add-recipe", status_code=200)
 async def add_recipe(recipe:Recipe):
     print(recipe)
+    db.addRecipe(recipe)
