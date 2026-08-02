@@ -1,5 +1,6 @@
 # https://npyscreen.readthedocs.io/introduction.html -> TUI library
 import pulp
+import yaml
 
 recipes = [
     {
@@ -112,9 +113,10 @@ for p in products:
 idx_gen = next(j for j, r in enumerate(recipes) if r["name"] == "EU")
 boule_time = recipes[idx_gen]["time"]
 # 1 станок = 1 / boule_time циклов в секунду
-max_boule_rate = 21
+diesel_gen_mv = 30 + 1
+diesel_gen_hv = 1
 
-prob += x[idx_gen] == max_boule_rate, "Exactly_1_Boule_Machine"
+prob += x[idx_gen] == diesel_gen_mv + diesel_gen_hv*4, "Exactly_1_Boule_Machine"
 
 prob.solve()
 

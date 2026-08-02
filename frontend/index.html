@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GregTech Craft Calculator — Калькулятор рецептов</title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <link href="/static/styles.css" rel="stylesheet">
+        <script src="/static/script.js"></script>
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="header">
+                <div class="icon-row">⚙️⛏️🔧</div>
+                <h1>GT CRAFT CALCULATOR</h1>
+                <div class="subtitle">GregTech — калькулятор производственных цепочек</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><span class="dot"></span> О ПРОЕКТЕ</div>
+            <div class="panel-body description">
+                <p><span class="highlight">GTNH Craft Calculator</span> — инструмент для расчёта производственных линий в духе GregTech: New Horizons. Добавляйте рецепты, указывайте тир машины, энергию, шансы выхода — калькулятор учтёт <span class="highlight">ускорение</span> (×2 за тир), <span class="highlight">рост энергии</span> (×4 за тир) и <span class="highlight">вероятностные выходы</span>. Группируйте рецепты, тегируйте ресурсы, экспортируйте/импортируйте данные.</p>
+                <p>Вдохновлено <span class="highlight">shadowtheage.github.io/gtnh</span>.</p>
+            </div>    
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header"><span class="dot"></span> Добавить рецепт</div>
+            <div class="panel-body">
+                <!-- Название рецепта -->
+                <div class="form-item">
+                    <label>Название рецепта</label>
+                    <input type="text" id="recipeName" placeholder="Например: Выплавка стали">
+                </div>
+                <!-- Группа рецепта -->
+                <div class="form-item">
+                    <label>Группа</label>
+                    <input type="text" id="recipeGroup" placeholder="Например: EBF/Генерация ресурсов">
+                </div>
+                <!-- Вид крафта -->
+                <div class="form-item">
+                    <label>Вид крафта</label>
+                    <input type="text" id="recipeType" placeholder="Например: Дробление/Выплавка">
+                </div>
+                <!-- Длительность крафта -->
+                <div class="form-item">
+                    <label>Длительность</label>
+                    <input type="text" id="recipeDuration" placeholder="Например: 20">
+                    <select id="recipeDurationType">
+                        <option value="ticks">Тиков</option>
+                        <option value="seconds">Секунд</option>
+                    </select>
+                </div>
+                <!-- Базовый тир рецепта -->
+                <div class="form-item">
+                    <select id="recipeTier">
+                        <option value="1">LV</option>
+                        <option value="2">MV</option>
+                        <option value="3">HV</option>
+                    </select>
+                </div>
+                <!-- Общие траты по энергии -->
+                <div class="form-item">
+                    <label>Энергия (EU/t)</label>
+                    <input type="number" id="recipeEnergy" placeholder="Например: 32">
+                </div>
+
+                <!-- Потребляемые ресурсы -->
+                <div class="io-section inputs">
+                    <h4>📥 ВХОДЫ (потребление)</h4>
+                    <div id="inputs-container">
+                        <div class="io-row">
+                            <div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div>
+                            <input type="number" class="input-field qty io-qty" placeholder="Кол-во" step="any" min="0">
+                            <button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm add-row-btn" onclick="addInputRow()">+ Добавить вход</button>
+                </div>
+                
+                <!-- Выходные ресурсы -->
+                <div class="io-section outputs">
+                    <h4>📤 ВЫХОДЫ (производство)</h4>
+                    <div class="col-headers"><span class="col-name">Название</span><span class="col-qty">Кол-во</span><span class="col-chance">Шанс %</span><span class="col-del"></span></div>
+                    <div id="outputs-container">
+                        <div class="io-row">
+                            <div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div>
+                            <input type="number" class="input-field qty io-qty" placeholder="К-во" step="any" min="0">
+                            <input type="number" class="input-field chance io-chance" value="100" placeholder="%" step="any" min="0" max="100">
+                            <button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm add-row-btn" onclick="addOutputRow()">+ Добавить выход</button>
+                </div>
+
+                <!-- Кнопки управления формой -->
+                <div>
+                    <button class="btn btn-green" id="submit-btn" onclick="submitRecipe()">✅ Добавить рецепт</button>
+                    <button class="btn btn-orange" onclick="clearForm()">🔄 Очистить форму</button>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>

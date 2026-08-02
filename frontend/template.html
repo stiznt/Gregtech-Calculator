@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTNH Craft Calculator — Калькулятор рецептов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d0d14; --bg-panel: #1a1a28; --bg-input: #12121c;
+            --border: #3a3a4a; --border-light: #5a5a6a;
+            --text: #d4d4d4; --text-bright: #ffffff;
+            --accent-orange: #f57c00; --accent-green: #4caf50;
+            --accent-red: #e53935; --accent-blue: #42a5f5;
+            --accent-yellow: #ffca28; --accent-purple: #ab47bc;
+            --accent-cyan: #26c6da; --accent-pink: #ec407a; --gold: #ffb300;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0d0d14;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px);
+            color: var(--text); font-family: 'Press Start 2P', 'Courier New', monospace;
+            min-height: 100vh; line-height: 1.8; image-rendering: pixelated;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 30px 20px 20px; }
+        .header .icon-row { font-size: 48px; letter-spacing: 8px; margin-bottom: 10px; animation: float 2s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .header h1 { font-size: 18px; color: var(--gold); text-shadow: 2px 2px 0 #000, -1px -1px 0 #000; letter-spacing: 2px; }
+        .header .subtitle { font-size: 9px; color: #7a7a7a; margin-top: 8px; letter-spacing: 1px; }
+
+        .panel { background: var(--bg-panel); border: 3px solid var(--border); box-shadow: inset 2px 2px 0 rgba(255,255,255,0.03), 4px 4px 0 rgba(0,0,0,0.5); margin-bottom: 24px; position: relative; }
+        .panel::before { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 1px solid var(--border-light); pointer-events: none; z-index: -1; }
+        .panel-header { background: #1e1e30; padding: 12px 18px; border-bottom: 2px solid var(--border); font-size: 11px; color: var(--text-bright); letter-spacing: 1px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .panel-header .dot { width: 10px; height: 10px; display: inline-block; box-shadow: 0 0 6px var(--accent-orange); }
+        .panel-header .header-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+        .panel-body { padding: 18px; }
+        .panel-body.no-padding { padding: 12px 18px 6px; }
+        .description p { font-size: 9px; margin-bottom: 10px; color: #b0b0b0; }
+        .description .highlight { color: var(--accent-orange); }
+
+        .btn { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; padding: 10px 16px; border: 2px solid; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.1s; image-rendering: pixelated; background: #2a2a3a; color: var(--text-bright); border-color: #555; box-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
+        .btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
+        .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.4); }
+        .btn-green { background: #2e4a2e; border-color: var(--accent-green); color: #a5d6a7; } .btn-green:hover { background: #3a5a3a; }
+        .btn-orange { background: #3d2a14; border-color: var(--accent-orange); color: #ffcc80; } .btn-orange:hover { background: #4d3618; }
+        .btn-red { background: #3d1a1a; border-color: var(--accent-red); color: #ef9a9a; } .btn-red:hover { background: #4d2020; }
+        .btn-blue { background: #1a2a3d; border-color: var(--accent-blue); color: #90caf9; } .btn-blue:hover { background: #20304a; }
+        .btn-cyan { background: #0d2a2a; border-color: var(--accent-cyan); color: #80deea; } .btn-cyan:hover { background: #103535; }
+        .btn-pink { background: #2a0d1a; border-color: var(--accent-pink); color: #f48fb1; } .btn-pink:hover { background: #351020; }
+        .btn-sm { font-size: 7px; padding: 6px 10px; }
+        .btn-xs { font-size: 6px; padding: 4px 8px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 8px; color: #aaa; margin-bottom: 5px; letter-spacing: 1px; }
+        .form-group label .required { color: var(--accent-red); }
+        .input-field { width: 100%; font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; padding: 10px 12px; background: var(--bg-input); border: 2px solid var(--border); color: var(--text-bright); outline: none; letter-spacing: 0.5px; }
+        .input-field:focus { border-color: var(--accent-orange); box-shadow: 0 0 8px rgba(245,124,0,0.2); }
+        .input-field::placeholder { color: #555; font-size: 7px; }
+        .input-field.computed { color: #888; border-style: dashed; background: #0e0e18; }
+        select.input-field { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+
+        .speed-mode-row { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+        .speed-mode-btn { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 7px; padding: 8px 12px; border: 2px solid var(--border); background: var(--bg-input); color: #777; cursor: pointer; letter-spacing: 1px; transition: all 0.15s; }
+        .speed-mode-btn.active { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(245,124,0,0.08); }
+        .speed-row, .tier-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .speed-row .field-wrap, .tier-row .field-wrap { flex: 1; min-width: 140px; }
+        .speed-arrow { font-size: 14px; color: #666; padding-bottom: 8px; }
+
+        .computed-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; background: #0e0e18; border: 1px dashed #333; padding: 10px 14px; font-size: 7px; color: #aaa; }
+        .computed-row .comp-item { display: flex; flex-direction: column; gap: 4px; }
+        .computed-row .comp-val { color: var(--accent-yellow); font-size: 9px; }
+        .computed-row .comp-val.warn { color: var(--accent-red); }
+
+        /* IO ROWS with tag support */
+        .io-row { display: flex; gap: 4px; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; }
+        .io-row .io-name-wrap { flex: 1; min-width: 80px; position: relative; }
+        .group-dropdown-wrap { position: relative; }
+        .io-row .input-field { flex: 1; min-width: 80px; }
+        .io-row .input-field.qty { max-width: 60px; flex: 0 0 60px; }
+        .io-row .input-field.chance { max-width: 55px; flex: 0 0 55px; }
+
+        .tag-dropdown {
+            display: none; position: absolute; top: 100%; left: 0; right: 0;
+            background: #1a1a2e; border: 2px solid var(--accent-orange);
+            z-index: 50; max-height: 160px; overflow-y: auto;
+        }
+        .tag-dropdown .tag-item {
+            padding: 8px 12px; font-size: 7px; color: #ccc; cursor: pointer;
+            border-bottom: 1px solid #2a2a3a; letter-spacing: 0.5px;
+        }
+        .tag-dropdown .tag-item:hover { background: #2a2a3a; color: #fff; }
+        .tag-dropdown .tag-item .tag-badge {
+            font-size: 6px; color: var(--accent-pink); margin-left: 8px;
+            border: 1px solid var(--accent-pink); padding: 1px 5px;
+        }
+
+        .io-section { background: #151520; border: 2px solid #2a2a3a; padding: 12px; margin-bottom: 10px; }
+        .io-section h4 { font-size: 9px; color: #999; margin-bottom: 10px; letter-spacing: 1px; }
+        .io-section.inputs h4 { color: var(--accent-red); }
+        .io-section.outputs h4 { color: var(--accent-green); }
+
+        .col-headers {
+            display: flex; gap: 4px; font-size: 6px; color: #666;
+            margin-bottom: 6px; letter-spacing: 0.5px;
+            padding: 0 2px;
+        }
+        .col-headers .col-name { flex: 1; min-width: 80px; }
+        .col-headers .col-qty { width: 60px; flex: 0 0 60px; text-align: center; }
+        .col-headers .col-chance { width: 55px; flex: 0 0 55px; text-align: center; }
+        .col-headers .col-del { width: 36px; flex: 0 0 36px; }
+
+        .add-row-btn { margin-top: 6px; }
+
+        .edit-banner {
+            background: rgba(171,71,188,0.12); border: 2px solid var(--accent-purple);
+            padding: 10px 14px; margin-bottom: 14px; font-size: 9px;
+            color: var(--accent-purple); letter-spacing: 1px;
+            display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .edit-banner.visible { display: flex; }
+        .edit-banner .cancel-edit { margin-left: auto; }
+
+        /* Search */
+        .search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+        .search-row .input-field { max-width: 300px; font-size: 8px; padding: 8px 12px; }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 8px; }
+        table th { background: #1e1e30; padding: 10px 8px; text-align: left; border-bottom: 2px solid var(--border); color: #aaa; font-size: 7px; letter-spacing: 1px; white-space: nowrap; }
+        table td { padding: 8px; border-bottom: 1px solid #222; white-space: nowrap; }
+        table tbody tr:hover { background: rgba(255,255,255,0.02); }
+        table tbody tr.hidden { display: none; }
+
+        .net-positive { color: var(--accent-green); }
+        .net-negative { color: var(--accent-red); }
+        .net-zero { color: var(--accent-yellow); }
+
+        .badge { display: inline-block; font-size: 7px; padding: 3px 8px; border: 1px solid; letter-spacing: 0.5px; }
+        .badge-input { border-color: var(--accent-red); color: #ef9a9a; background: rgba(229,57,53,0.1); }
+        .badge-output { border-color: var(--accent-green); color: #a5d6a7; background: rgba(76,175,80,0.1); }
+        .badge-tag { border-color: var(--accent-pink); color: #f48fb1; background: rgba(236,64,122,0.1); font-size: 6px; padding: 2px 6px; margin: 0 2px; cursor: pointer; position: relative; } .badge-tag:hover { background: rgba(236,64,122,0.25); text-decoration: line-through; } .badge-tag::after { content: ' ×'; opacity: 0; transition: opacity 0.15s; } .badge-tag:hover::after { opacity: 1; }
+
+        .resource-link { color: var(--accent-cyan); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
+        .resource-link:hover { color: #80deea; }
+
+        .tier-badge { display: inline-block; font-size: 7px; padding: 3px 8px; border: 1px solid; letter-spacing: 1px; font-weight: bold; }
+        .tier-lv{color:#b0bec5;border-color:#b0bec5;background:rgba(176,190,197,0.10)}.tier-mv{color:#ffab40;border-color:#ffab40;background:rgba(255,171,64,0.10)}.tier-hv{color:#ff8f00;border-color:#ff8f00;background:rgba(255,143,0,0.10)}.tier-ev{color:#ce93d8;border-color:#ce93d8;background:rgba(206,147,216,0.10)}.tier-iv{color:#e0e0e0;border-color:#e0e0e0;background:rgba(224,224,224,0.10)}.tier-luv{color:#64ffda;border-color:#64ffda;background:rgba(100,255,218,0.10)}.tier-zpm{color:#ea80fc;border-color:#ea80fc;background:rgba(234,128,252,0.10)}.tier-uv{color:#82b1ff;border-color:#82b1ff;background:rgba(130,177,255,0.10)}.tier-uhv{color:#ff5252;border-color:#ff5252;background:rgba(255,82,82,0.10)}
+
+        .group-header { background: #1e1e32; border: 2px solid #333; padding: 10px 14px; margin-bottom: 4px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 9px; color: #ccc; letter-spacing: 1px; transition: background 0.15s; }
+        .group-header.all-disabled { opacity: 0.4; border-style: dashed; }
+        .group-header.partial-disabled { opacity: 0.7; }
+        .group-header .group-toggle-btn { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 6px; padding: 4px 8px; border: 1px solid; cursor: pointer; background: transparent; letter-spacing: 1px; transition: all 0.1s; }
+        .group-header .group-toggle-btn.enable-all { color: var(--accent-green); border-color: var(--accent-green); }
+        .group-header .group-toggle-btn.disable-all { color: var(--accent-red); border-color: var(--accent-red); }
+        .group-header .group-toggle-btn:hover { transform: translate(-1px, -1px); }
+        .group-header:hover { background: #262640; }
+        .group-header .arrow { transition: transform 0.2s; font-size: 10px; color: #888; }
+        .group-header.collapsed .arrow { transform: rotate(-90deg); }
+        .group-body { margin-bottom: 8px; margin-left: 12px; border-left: 2px solid #2a2a3a; padding-left: 10px; }
+        .group-body.collapsed { display: none; }
+        .group-count { font-size: 7px; color: #666; margin-left: auto; }
+
+        .recipe-card { background: #151520; border: 2px solid #2a2a3a; padding: 12px; margin-bottom: 6px; position: relative; transition: all 0.2s; }
+        .recipe-card.disabled { opacity: 0.35; filter: grayscale(0.7); border-style: dashed; border-color: #444; }
+        .recipe-card.disabled .recipe-name { color: #666; text-decoration: line-through; }
+        .recipe-card.disabled::after { content: '⏸ ОТКЛЮЧЕН'; position: absolute; top: 8px; right: 12px; font-size: 6px; color: var(--accent-red); letter-spacing: 1px; opacity: 0.8; }
+        .recipe-card.editing { border-color: var(--accent-purple); box-shadow: 0 0 12px rgba(171,71,188,0.25); }
+        .recipe-card .recipe-name { font-size: 10px; color: var(--gold); margin-bottom: 8px; letter-spacing: 1px; }
+        .recipe-card .recipe-speed { font-size: 7px; color: #888; margin-bottom: 4px; }
+        .recipe-card .recipe-tier { font-size: 7px; margin-bottom: 8px; }
+        .recipe-card .recipe-io { display: flex; gap: 16px; flex-wrap: wrap; font-size: 7px; }
+        .recipe-card .io-list { list-style: none; }
+        .recipe-card .io-list li { padding: 2px 0; }
+        .recipe-card .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .context-menu { display: none; position: fixed; background: #1a1a2e; border: 2px solid #444; z-index: 9999; min-width: 240px; box-shadow: 4px 4px 0 rgba(0,0,0,0.6); }
+        .context-menu .ctx-item { padding: 10px 14px; font-size: 7px; color: #ccc; cursor: pointer; letter-spacing: 1px; border-bottom: 1px solid #2a2a3a; transition: background 0.1s; }
+        .context-menu .ctx-item:hover { background: #2a2a3a; color: #fff; }
+        .context-menu .ctx-item:last-child { border-bottom: none; }
+
+        .energy-summary { background: #151520; border: 2px solid #2a2a3a; padding: 14px; margin-top: 16px; font-size: 8px; }
+        .energy-summary .energy-collapsed { display: none; }
+        .energy-summary .total-eu .arrow-rotated { transform: rotate(-90deg); }
+        .energy-summary .total-eu { font-size: 11px; color: var(--accent-yellow); margin-bottom: 10px; letter-spacing: 1px; }
+        .energy-summary table { margin-top: 8px; }
+        .energy-summary table th { font-size: 6px; background: #1a1a28; }
+        .energy-summary table td { font-size: 7px; }
+
+        .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); }
+        .tab-btn { font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 8px; padding: 10px 14px; background: transparent; border: none; color: #777; cursor: pointer; letter-spacing: 1px; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+        .tab-btn:hover { color: #aaa; }
+        .tab-btn.active { color: var(--accent-orange); border-bottom-color: var(--accent-orange); }
+        .tab-content { display: none; padding: 16px 0; font-size: 8px; color: #aaa; line-height: 2; }
+        .tab-content.active { display: block; }
+        .tab-content h5 { font-size: 9px; color: #ccc; margin: 12px 0 6px; }
+        .tab-content code { background: #1a1a2e; padding: 2px 6px; border: 1px solid #333; font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 7px; color: var(--accent-yellow); }
+        .tab-content .note { background: #1a1a28; border-left: 3px solid var(--accent-orange); padding: 8px 12px; margin: 10px 0; font-size: 7px; }
+
+        .footer { text-align: center; padding: 20px; font-size: 7px; color: #555; letter-spacing: 1px; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0d0d14; }
+        ::-webkit-scrollbar-thumb { background: #333; border: 1px solid #444; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        .has-tooltip { position: relative; cursor: help; border-bottom: 1px dotted #666; }
+        .has-tooltip .tooltip-text { visibility: hidden; opacity: 0; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #1a1a2e; border: 1px solid #555; padding: 6px 10px; font-size: 7px; white-space: nowrap; color: #ccc; z-index: 10; pointer-events: none; transition: opacity 0.15s; }
+        .has-tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        #import-file { display: none; }
+        .no-results { font-size: 8px; color: #555; text-align: center; padding: 20px; display: none; }
+
+        @media (max-width: 700px) {
+            .header h1 { font-size: 13px; }
+            .panel-body { padding: 12px; }
+            .io-row { flex-direction: row; }
+            .io-row .input-field.qty, .io-row .input-field.chance { max-width: 50px; flex: 0 0 50px; }
+            .col-headers .col-qty, .col-headers .col-chance { width: 50px; flex: 0 0 50px; }
+            .speed-row, .tier-row { flex-direction: column; }
+            .speed-arrow { display: none; }
+            .computed-row { flex-direction: column; }
+            table { font-size: 6px; }
+            table th, table td { padding: 6px 4px; }
+            .btn { font-size: 7px; padding: 8px 12px; }
+        }
+    
+        /* ==== RECIPE TREE ==== */
+        .tree-controls { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+        .tree-controls .tree-field { display: flex; flex-direction: column; gap: 4px; }
+        .tree-controls label { font-size: 7px; color: #9a9a9a; letter-spacing: 1px; }
+        .tree-controls .input-field { font-size: 8px; padding: 8px 10px; min-width: 170px; }
+        .tree-btn { font-size: 7px; padding: 8px 12px; }
+        .tree-container { margin-top: 6px; }
+        .tree-node { background: #14141f; border: 2px solid #2a2a3a; padding: 8px 12px; margin: 6px 0; position: relative; }
+        .tree-node.raw { border-style: dashed; border-color: #3a3a4a; background: #12121a; }
+        .node-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 8px; line-height: 1.6; }
+        .tree-toggle { cursor: pointer; color: var(--accent-orange); font-size: 8px; user-select: none; }
+        .tree-resource { color: var(--accent-cyan); font-size: 9px; font-weight: bold; }
+        .tree-rate { color: var(--accent-yellow); font-size: 7px; }
+        .tree-recipe { color: var(--accent-purple); }
+        .tree-machines { color: var(--accent-green); }
+        .tree-raw { color: var(--accent-orange); font-size: 7px; }
+        .tree-byproduct { margin: 4px 0 0 22px; font-size: 7px; color: var(--accent-green); }
+        .cycle-warn { color: var(--accent-red); font-size: 7px; }
+        .tree-children { margin: 8px 0 0 18px; padding-left: 14px; border-left: 2px dashed #333; }
+        .tree-children.collapsed { display: none; }
+        .tree-recipe-select { font-size: 7px; padding: 4px 6px; max-width: 280px; }
+        .tree-leaves { background: #101018; border: 2px solid #2a2a3a; padding: 10px 14px; margin-top: 12px; font-size: 8px; }
+        .tree-leaves h4 { font-size: 8px; color: var(--accent-orange); margin-bottom: 8px; letter-spacing: 1px; }
+        .tree-leaves .leaf-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px dashed #222; }
+        .tree-leaves .leaf-row:last-child { border-bottom: none; }
+        .tree-leaves .leaf-name { color: var(--text-bright); }
+        .tree-leaves .leaf-rate { color: var(--accent-yellow); }
+
+        /* ==== MACHINES ==== */
+        .machine-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+        .machine-form .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+        .machine-form .form-group input { font-size: 8px; }
+        .machines-list { display: flex; flex-direction: column; gap: 8px; }
+        .machine-card { background: #14141f; border: 2px solid #2a2a3a; padding: 10px 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 8px; }
+        .machine-card.editing { border-color: var(--accent-purple); }
+        .machine-card .mc-name { color: var(--accent-cyan); font-size: 9px; font-weight: bold; }
+        .machine-card .mc-mult { color: var(--accent-yellow); font-size: 7px; }
+        .machine-card .mc-usage { color: #888; font-size: 7px; }
+        .machine-card .mc-actions { margin-left: auto; display: flex; gap: 6px; }
+        .badge-craft { border-color: var(--accent-blue); color: #90caf9; background: rgba(66,165,245,0.1); font-size: 6px; padding: 2px 6px; }
+        .badge-machine { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(255,179,0,0.08); font-size: 6px; padding: 2px 6px; }
+        .recipe-craft-line { font-size: 7px; color: #999; margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon-row">⚙️⛏️🔧</div>
+            <h1>GTNH CRAFT CALCULATOR</h1>
+            <div class="subtitle">GregTech: New Horizons — калькулятор производственных цепочек</div>
+        </div>
+
+        <div class="context-menu" id="context-menu">
+            <div class="ctx-item" onclick="ctxAddRecipe()">➕ Добавить рецепт, производящий этот ресурс</div>
+            <div class="ctx-item" onclick="ctxConsumeRecipe()">➕ Добавить рецепт, потребляющий этот ресурс</div>
+            <div class="ctx-item" onclick="ctxAddTag()">🏷 Применить тег к этому ресурсу</div>
+            <div class="ctx-item" id="ctx-clear-tags" onclick="ctxClearTags()" style="color:#ef9a9a;">🗑 Удалить все теги с ресурса</div>
+        </div>
+        <input type="file" id="import-file" accept=".json" onchange="importRecipes(event)">
+
+        <!-- DESCRIPTION -->
+        <div class="panel">
+            <div class="panel-header"><span class="dot"></span> О ПРОЕКТЕ</div>
+            <div class="panel-body description">
+                <p><span class="highlight">GTNH Craft Calculator</span> — инструмент для расчёта производственных линий в духе GregTech: New Horizons. Добавляйте рецепты, указывайте тир машины, энергию, шансы выхода — калькулятор учтёт <span class="highlight">ускорение</span> (×2 за тир), <span class="highlight">рост энергии</span> (×4 за тир) и <span class="highlight">вероятностные выходы</span>. Группируйте рецепты, тегируйте ресурсы, экспортируйте/импортируйте данные.</p>
+                <p>Вдохновлено <span class="highlight">shadowtheage.github.io/gtnh</span>.</p>
+            </div>
+        </div>
+
+        <!-- INSTRUCTION -->
+        <div class="panel">
+            <div class="panel-header"><span class="dot" style="background:var(--accent-blue);box-shadow:0 0 6px var(--accent-blue);"></span> ИНСТРУКЦИЯ</div>
+            <div class="panel-body">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('tab-basics',this)">📖 Основы</button>
+                    <button class="tab-btn" onclick="switchTab('tab-example',this)">💡 Пример</button>
+                    <button class="tab-btn" onclick="switchTab('tab-features',this)">🆕 Новое</button>
+                </div>
+                <div id="tab-basics" class="tab-content active">
+                    <h5>1. Добавление рецепта</h5><p>Заполните <code>Название</code>, выберите режим (тики или скорость).</p>
+                    <h5>2. Тиры и энергия</h5><p>Выберите <strong>начальный тир</strong> и <strong>тир машины</strong>. Укажите <strong>EU/t</strong> на начальном тире.</p>
+                    <h5>3. Шанс выхода, группы, теги</h5><p>Для выходов — шанс (0–100%), для группировки — имя группы, для категоризации — теги ресурсов.</p>
+                    <h5>4. Поиск</h5><p>Строка поиска над итоговой таблицей фильтрует ресурсы в реальном времени.</p>
+                </div>
+                <div id="tab-example" class="tab-content">
+                    <h5>Пример: выплавка стали в EBF</h5>
+                    <div class="note"><strong>Рецепт:</strong> Выплавка стали<br><strong>Тики:</strong> 100 / <strong>LV</strong>→<strong>MV</strong><br><strong>EU/t база:</strong> 120<br><strong>Вход:</strong> Железо ×1, Уголь ×1<br><strong>Выход:</strong> Сталь ×1 (100%)</div>
+                    <p>На MV: скорость = <code>0.4 оп/с</code>, энергия = <code>480 EU/t</code>.</p>
+                </div>
+                <div id="tab-features" class="tab-content">
+                    <h5>🆕 Возможности</h5>
+                    <p><strong>📁 Группы:</strong> сворачивайте рецепты по группам.</p>
+                    <p><strong>💾 Экспорт/Импорт:</strong> кнопки всегда доступны в шапке «Добавленных рецептов» — даже если список пуст.</p>
+                    <p><strong>🔍 Поиск:</strong> фильтр над итоговой таблицей.</p>
+                    <p><strong>🏷 Теги ресурсов:</strong> при вводе названия ресурса появляется выпадающий список с уже существующими тегами. Теги видны в итоговой таблице.</p>
+                    <p><strong>🖱 ПКМ:</strong> по ресурсу в таблице → быстрое добавление рецепта или применение тега.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <div class="panel" id="form-panel">
+            <div class="panel-header">
+                <span class="dot" id="form-dot" style="background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);"></span>
+                <span id="form-title">ДОБАВИТЬ РЕЦЕПТ</span>
+            </div>
+            <div class="panel-body">
+                <div class="edit-banner" id="edit-banner">⚠ РЕЖИМ РЕДАКТИРОВАНИЯ <button class="btn btn-red btn-xs cancel-edit" onclick="cancelEdit()">✕ Отмена</button></div>
+
+                <div class="form-group"><label>Название рецепта <span class="required">*</span></label><input type="text" id="recipeName" class="input-field" placeholder="Напр.: Выплавка стали"></div>
+                <div class="form-group"><label>Группа <span class="has-tooltip">[?]<span class="tooltip-text">Выберите существующую группу или введите новую. Рецепты с одинаковой группой сворачиваются вместе.</span></span></label><div style="position:relative;"><input type="text" id="recipeGroup" class="input-field" placeholder="Напр.: EBF / Цех сборки" autocomplete="off" oninput="showGroupDropdown()" onfocus="showGroupDropdown()"><div class="tag-dropdown" id="group-dropdown" style="display:none;"></div></div>
+
+                
+                <div class="form-group"><label>Вид крафта <span class="has-tooltip">[?]<span class="tooltip-text">Тип операции, напр.: Плавка, Сборка, Дробление, Химия...</span></span></label><div style="position:relative;"><input type="text" id="recipeCraftType" class="input-field" list="crafttype-datalist" placeholder="Напр.: Плавка" autocomplete="off"><datalist id="crafttype-datalist"></datalist></div></div>
+                <div class="form-group"><label>Станок <span class="has-tooltip">[?]<span class="tooltip-text">Станок, выполняющий этот крафт. Скорость и энергия рецепта умножаются на множители станка.</span></span></label><div class="tier-row"><div class="field-wrap"><select id="recipeMachine" class="input-field" onchange="recalcTierEffects()"><option value="">Стандартный (×1/×1)</option></select></div></div></div>
+<div class="form-group"><label>Режим ввода скорости</label>
+                    <div class="speed-mode-row">
+                        <button class="speed-mode-btn active" id="mode-ticks-btn" onclick="setSpeedMode('ticks')">⏱ ТИКИ</button>
+                        <button class="speed-mode-btn" id="mode-speed-btn" onclick="setSpeedMode('speed')">⚡ СКОРОСТЬ (оп/с)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><span id="speed-label-ticks">Длительность (тики) <span class="required">*</span></span><span id="speed-label-speed" style="display:none;">Скорость (операций/сек) <span class="required">*</span></span></label>
+                    <div class="speed-row"><div class="field-wrap"><input type="number" id="ticksInput" class="input-field" placeholder="Напр.: 40" step="any" min="1"></div><span class="speed-arrow">→</span><div class="field-wrap"><input type="number" id="speedInput" class="input-field computed" placeholder="Авто-расчёт" step="any" min="0.001" readonly></div></div>
+                </div>
+
+                <div class="form-group"><label>Начальный тир <span class="required">*</span></label><div class="tier-row"><div class="field-wrap"><select id="startTier" class="input-field" onchange="recalcTierEffects()"><option value="0">LV</option><option value="1">MV</option><option value="2">HV</option><option value="3">EV</option><option value="4">IV</option><option value="5">LuV</option><option value="6">ZPM</option><option value="7">UV</option><option value="8">UHV</option></select></div></div></div>
+                <div class="form-group"><label>Тир машины <span class="required">*</span></label><div class="tier-row"><div class="field-wrap"><select id="runningTier" class="input-field" onchange="recalcTierEffects()"><option value="0">LV</option><option value="1">MV</option><option value="2">HV</option><option value="3">EV</option><option value="4">IV</option><option value="5">LuV</option><option value="6">ZPM</option><option value="7">UV</option><option value="8">UHV</option></select></div></div></div>
+                <div class="form-group"><label>Энергия (EU/t) на начальном тире <span class="required">*</span></label><div class="speed-row"><div class="field-wrap"><input type="number" id="energyPerTick" class="input-field" placeholder="Напр.: 120" step="any" min="0" oninput="recalcTierEffects()"></div></div></div>
+
+                <div class="form-group"><label>Количество машин <span class="has-tooltip">[?]<span class="tooltip-text">Сколько одинаковых машин работают параллельно. Все потоки умножаются на это число.</span></span></label><div class="speed-row"><div class="field-wrap"><input type="number" id="machineCount" class="input-field" value="1" placeholder="1" step="1" min="1" oninput="recalcTierEffects()"></div></div></div>
+
+                <div class="computed-row" id="computed-row">
+                    <div class="comp-item"><span>⚡ Сумм. скорость</span><span class="comp-val" id="comp-speed">—</span></div>
+                    <div class="comp-item"><span>🔌 Сумм. EU/t</span><span class="comp-val" id="comp-eut">—</span></div>
+                    <div class="comp-item"><span>⚡ Сумм. EU/s</span><span class="comp-val" id="comp-eus">—</span></div>
+                    <div class="comp-item"><span>Множ. скорости</span><span class="comp-val" id="comp-speed-mul">×1</span></div>
+                    <div class="comp-item"><span>Множ. энергии</span><span class="comp-val" id="comp-energy-mul">×1</span></div>
+                    <div class="comp-item"><span>🖥 Машин</span><span class="comp-val" id="comp-machines">1</span></div>
+                </div>
+
+                <!-- INPUTS -->
+                <div class="io-section inputs">
+                    <h4>📥 ВХОДЫ (потребление)</h4>
+                    <div id="inputs-container">
+                        <div class="io-row">
+                            <div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div>
+                            <input type="number" class="input-field qty io-qty" placeholder="Кол-во" step="any" min="0">
+                            <button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm add-row-btn" onclick="addInputRow()">+ Добавить вход</button>
+                </div>
+
+                <!-- OUTPUTS -->
+                <div class="io-section outputs">
+                    <h4>📤 ВЫХОДЫ (производство)</h4>
+                    <div class="col-headers"><span class="col-name">Название</span><span class="col-qty">Кол-во</span><span class="col-chance">Шанс %</span><span class="col-del"></span></div>
+                    <div id="outputs-container">
+                        <div class="io-row">
+                            <div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div>
+                            <input type="number" class="input-field qty io-qty" placeholder="К-во" step="any" min="0">
+                            <input type="number" class="input-field chance io-chance" value="100" placeholder="%" step="any" min="0" max="100">
+                            <button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm add-row-btn" onclick="addOutputRow()">+ Добавить выход</button>
+                </div>
+
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-green" id="submit-btn" onclick="submitRecipe()">✅ Добавить рецепт</button>
+                    <button class="btn btn-orange" onclick="clearFormFull()">🔄 Очистить форму</button>
+                </div>
+                <div id="form-error" style="color:var(--accent-red);font-size:8px;margin-top:10px;display:none;"></div>
+            </div>
+        </div>
+
+        <!-- RECIPES + SUMMARY PANEL -->
+        <div class="panel" id="summary-panel">
+            <div class="panel-header">
+                <span class="dot" style="background:var(--accent-purple);box-shadow:0 0 6px var(--accent-purple);"></span> ДОБАВЛЕННЫЕ РЕЦЕПТЫ
+                <span class="header-actions">
+                    <button class="btn btn-sm" id="toggle-all-btn" onclick="toggleAllRecipes()" style="font-size:6px;padding:4px 8px;">⏸ Откл. все</button>
+                    <button class="btn btn-cyan btn-xs" onclick="exportRecipes()">📤 Экспорт</button>
+                    <button class="btn btn-cyan btn-xs" onclick="document.getElementById('import-file').click()">📥 Импорт</button>
+                </span> ИТОГИ ПО РЕСУРСАМ</div>
+            <div class="panel-body">
+                <p style="font-size:6px;color:#555;margin-bottom:10px;">🖱 ПКМ по названию ресурса — быстрое добавление / тег</p>
+                <div class="recipes-list-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                    <button class="btn btn-red btn-sm" id="clear-all-btn" onclick="clearAll()" style="font-size:6px;padding:4px 8px;display:none;">🗑 Очистить все</button>
+                </div>
+                <div id="recipes-list-body" style="margin-bottom:16px;"></div>
+                <div id="recipes-clear-body"></div>
+                <div class="search-row">
+                    <input type="text" id="search-input" class="input-field" placeholder="🔍 Поиск ресурса..." oninput="filterSummary()">
+                    <button class="btn btn-sm" id="sort-status-btn" onclick="toggleSortByStatus()" title="Сортировка: дефицит/баланс/избыток">📊 По статусу</button>
+                    <span id="search-count" style="font-size:7px;color:#666;"></span>
+                </div>
+                <div class="table-wrapper"><table id="summary-table"><thead><tr><th>Ресурс</th><th>Теги</th><th>Потребление /с</th><th>Производство /с</th><th>Нетто /с</th><th>Статус</th></tr></thead><tbody id="summary-tbody"></tbody></table></div>
+                <div id="summary-empty" style="font-size:8px;color:#666;text-align:center;padding:20px;">Нет данных. Добавьте хотя бы один рецепт.</div>
+                <div class="no-results" id="no-results-msg">Ничего не найдено. Попробуйте другой запрос.</div>
+
+                <div class="energy-summary" id="energy-summary" style="display:none;">
+                    <div class="total-eu" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;" onclick="toggleEnergyTable()">
+                        <span id="energy-arrow" style="font-size:10px;color:#888;transition:transform 0.2s;">▼</span>
+                        <span>⚡ СУММАРНОЕ ЭНЕРГОПОТРЕБЛЕНИЕ: <span id="total-eus">—</span> EU/s</span>
+                        <span style="font-size:6px;color:#555;margin-left:auto;">(нажмите чтобы свернуть)</span>
+                    </div>
+                    <div id="energy-table-wrap">
+                    <div class="table-wrapper"><table><thead><tr><th>Рецепт</th><th>Тир</th><th>EU/t</th><th>EU/s</th></tr></thead><tbody id="energy-tbody"></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        
+        <!-- MACHINES -->
+        <div class="panel" id="machines-panel">
+            <div class="panel-header">
+                <span class="dot" style="background:var(--accent-blue);box-shadow:0 0 6px var(--accent-blue);"></span> СТАНКИ (обработка крафтов)
+            </div>
+            <div class="panel-body">
+                <p style="font-size:6px;color:#555;margin-bottom:10px;">🏭 Создайте станки с собственными множителями скорости и энергии. Каждому рецепту назначается станок — скорость и энергия рецепта умножаются на множители станка. Несколько станков могут обрабатывать один и тот же вид крафта.</p>
+                <div class="machine-form">
+                    <div class="form-group"><label>Название станка</label><input type="text" id="machineName" class="input-field" placeholder="Напр.: Плавильня EBF"></div>
+                    <div class="form-group"><label>Множитель скорости <span class="has-tooltip">[?]<span class="tooltip-text">Во сколько раз станок быстрее базового (×1).</span></span></label><input type="number" id="machineSpeedMult" class="input-field" value="1" step="any" min="0.01"></div>
+                    <div class="form-group"><label>Множитель энергии <span class="has-tooltip">[?]<span class="tooltip-text">Во сколько раз станок потребляет больше энергии (×1).</span></span></label><input type="number" id="machineEnergyMult" class="input-field" value="1" step="any" min="0.01"></div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <button class="btn btn-green btn-sm" id="machine-submit-btn" onclick="saveMachine()">➕ Добавить станок</button>
+                        <button class="btn btn-red btn-sm" id="machine-cancel-btn" onclick="cancelEditMachine()" style="display:none;">✕ Отмена</button>
+                    </div>
+                </div>
+                <div id="machine-form-error" style="color:var(--accent-red);font-size:8px;margin:0 0 10px;display:none;"></div>
+                <div class="machines-list" id="machines-list"></div>
+            </div>
+        </div>
+
+<!-- RECIPE TREE -->
+        <div class="panel" id="tree-panel">
+            <div class="panel-header">
+                <span class="dot" style="background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);"></span> ДЕРЕВО РЕЦЕПТОВ (потребление ресурсов)
+            </div>
+            <div class="panel-body">
+                <p style="font-size:6px;color:#555;margin-bottom:10px;">🌳 Показывает полную цепочку рецептов для производства выбранного ресурса с нужной скоростью. Ресурсы без рецепта производства — <span style="color:var(--accent-orange);">сырьё (листья дерева)</span>. Если ресурс производят несколько рецептов — можно выбрать нужный.</p>
+                <div class="tree-controls">
+                    <div class="tree-field"><label>РЕСУРС (цель)</label><input type="text" id="tree-resource-input" class="input-field" list="tree-datalist" placeholder="Напр.: Сталь" autocomplete="off"><datalist id="tree-datalist"></datalist></div>
+                    <div class="tree-field"><label>СКОРОСТЬ ПРОИЗВОДСТВА, ед/с</label><input type="number" id="tree-rate-input" class="input-field" value="1" step="any" min="0.0001"></div>
+                    <button class="btn btn-green btn-sm tree-btn" onclick="treeCalc()">🌳 ПОСТРОИТЬ ДЕРЕВО</button>
+                    <button class="btn btn-sm tree-btn" onclick="document.getElementById('tree-container').innerHTML='';document.getElementById('tree-leaves-summary').style.display='none';" title="Очистить">🗑 Очистить</button>
+                </div>
+                <div id="tree-leaves-summary" style="display:none;"></div>
+                <div class="tree-container" id="tree-container"></div>
+            </div>
+        </div>
+
+<div class="footer">GTNH Craft Calculator &copy; 2026 &nbsp;|&nbsp; Inspired by GregTech: New Horizons &nbsp;|&nbsp; 🛠️ Built with ❤️</div>
+
+        <!-- TAG INPUT DIALOG -->
+        <div class="context-menu" id="tag-dialog" style="min-width:280px;">
+            <div style="padding:12px;font-size:7px;color:#ccc;border-bottom:1px solid #333;">🏷 Введите тег для ресурса:</div>
+            <div style="padding:8px 12px;"><input type="text" id="tag-dialog-input" class="input-field" style="font-size:7px;" placeholder="Название тега" onkeydown="if(event.key==='Enter')applyTagFromDialog()"></div>
+            <div id="existing-tags-list" style="max-height:120px;overflow-y:auto;"></div>
+            <div style="padding:8px 12px;display:flex;gap:6px;">
+                <button class="btn btn-pink btn-xs" onclick="applyTagFromDialog()">✅ Применить</button>
+                <button class="btn btn-red btn-xs" onclick="hideTagDialog()">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TIERS=['LV','MV','HV','EV','IV','LuV','ZPM','UV','UHV'];
+        const TIER_CSS=['tier-lv','tier-mv','tier-hv','tier-ev','tier-iv','tier-luv','tier-zpm','tier-uv','tier-uhv'];
+
+        let recipes=[];
+        let editingIndex=-1;
+        let speedMode='ticks';
+        let ctxResourceName='';
+        // Tag system: map resourceName -> set of tags
+        let resourceTags={};
+        let sortByStatus=false;
+
+        // === TABS ===
+        function switchTab(id,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));btn.classList.add('active');document.getElementById(id).classList.add('active');}
+
+        // === SPEED ===
+        function setSpeedMode(mode){
+            speedMode=mode;
+            const tb=document.getElementById('mode-ticks-btn'),sb=document.getElementById('mode-speed-btn');
+            const tl=document.getElementById('speed-label-ticks'),sl=document.getElementById('speed-label-speed');
+            const ti=document.getElementById('ticksInput'),si=document.getElementById('speedInput');
+            if(mode==='ticks'){
+                tb.classList.add('active');sb.classList.remove('active');
+                tl.style.display='inline';sl.style.display='none';
+                ti.readOnly=false;ti.style.color='';ti.style.borderStyle='';ti.placeholder='Напр.: 40';
+                si.readOnly=true;si.style.color='#888';si.style.borderStyle='dashed';si.placeholder='Авто-расчёт';si.classList.add('computed');
+                autoCalcSpeed();
+            }else{
+                sb.classList.add('active');tb.classList.remove('active');
+                sl.style.display='inline';tl.style.display='none';
+                si.readOnly=false;si.style.color='';si.style.borderStyle='';si.placeholder='Напр.: 0.5';si.classList.remove('computed');
+                ti.readOnly=true;ti.style.color='#888';ti.style.borderStyle='dashed';ti.placeholder='Авто-расчёт';ti.classList.add('computed');
+                autoCalcTicks();
+            }
+            recalcTierEffects();
+        }
+        function autoCalcSpeed(){const tv=parseFloat(document.getElementById('ticksInput').value);document.getElementById('speedInput').value=(!isNaN(tv)&&tv>0)?(20/tv).toFixed(4):'';recalcTierEffects();}
+        function autoCalcTicks(){const sv=parseFloat(document.getElementById('speedInput').value);document.getElementById('ticksInput').value=(!isNaN(sv)&&sv>0)?(20/sv).toFixed(2):'';recalcTierEffects();}
+
+        // === TIER ===
+        function recalcTierEffects(){
+            const st=parseInt(document.getElementById('startTier').value),rt=parseInt(document.getElementById('runningTier').value);
+            const diff=rt-st,sMul=Math.pow(2,diff),eMul=Math.pow(4,diff);
+            const mc=parseInt(document.getElementById('machineCount').value)||1;
+            const selIdx=document.getElementById('recipeMachine')?parseInt(document.getElementById('recipeMachine').value):NaN;
+            const rMachine=(!isNaN(selIdx)&&machines[selIdx])?machines[selIdx]:null;
+            const sm=machineSpeedMult(rMachine),em=machineEnergyMult(rMachine);
+            const sTotal=sMul*sm,eTotal=eMul*em;
+            document.getElementById('comp-speed-mul').textContent='×'+sTotal.toFixed(2);
+            document.getElementById('comp-energy-mul').textContent='×'+eTotal.toFixed(2);
+            document.getElementById('comp-machines').textContent=mc;
+            let bs=NaN;
+            if(speedMode==='ticks'){const tv=parseFloat(document.getElementById('ticksInput').value);if(!isNaN(tv)&&tv>0)bs=20/tv;}
+            else{const sv=parseFloat(document.getElementById('speedInput').value);if(!isNaN(sv)&&sv>0)bs=sv;}
+            document.getElementById('comp-speed').textContent=(!isNaN(bs)&&bs>0)?(bs*sTotal*mc).toFixed(4)+' оп/с':'—';
+            const ep=parseFloat(document.getElementById('energyPerTick').value);
+            if(!isNaN(ep)&&ep>=0){const ae=ep*eTotal*mc,es=ae*20;document.getElementById('comp-eut').textContent=ae.toFixed(1)+' EU/t';document.getElementById('comp-eus').textContent=es.toFixed(1)+' EU/s';document.getElementById('comp-eus').classList.toggle('warn',es>100000);}
+            else{document.getElementById('comp-eut').textContent='—';document.getElementById('comp-eus').textContent='—';document.getElementById('comp-eus').classList.remove('warn');document.getElementById('comp-machines').textContent='1';}
+            if(rt<st){document.getElementById('runningTier').value=st;recalcTierEffects();}
+        }
+        function getBaseSpeed(){if(speedMode==='ticks'){const tv=parseFloat(document.getElementById('ticksInput').value);return(!isNaN(tv)&&tv>0)?20/tv:NaN;}else{const sv=parseFloat(document.getElementById('speedInput').value);return(!isNaN(sv)&&sv>0)?sv:NaN;}}
+        function getBaseTicks(){if(speedMode==='ticks')return parseFloat(document.getElementById('ticksInput').value);else{const sv=parseFloat(document.getElementById('speedInput').value);return(!isNaN(sv)&&sv>0)?20/sv:NaN;}}
+
+        // === TAG SYSTEM ===
+        function getAllTags(){
+            const all=new Set();
+            Object.values(resourceTags).forEach(tags=>tags.forEach(t=>all.add(t)));
+            return Array.from(all).sort();
+        }
+        function getTagsForResource(name){return resourceTags[name]||new Set();}
+        function setTagsForResource(name,tags){resourceTags[name]=new Set(tags);}
+        function addTagToResource(name,tag){if(!resourceTags[name])resourceTags[name]=new Set();resourceTags[name].add(tag);}
+        function removeResourceTag(resourceName,tag){
+            if(resourceTags[resourceName]){
+                resourceTags[resourceName].delete(tag);
+                if(resourceTags[resourceName].size===0)delete resourceTags[resourceName];
+                renderAll();
+            }
+        }
+        function getResourcesByTag(tag){return Object.entries(resourceTags).filter(([k,v])=>v.has(tag)).map(([k])=>k);}
+
+        // === TAG AUTOCOMPLETE ===
+        function showTagDropdown(wrap){
+            const input=wrap.querySelector('.io-name');
+            const dropdown=wrap.querySelector('.tag-dropdown');
+            const val=input.value.trim().toLowerCase();
+            if(!val){dropdown.style.display='none';return;}
+            const allTags=getAllTags();
+            const filtered=allTags.filter(t=>t.toLowerCase().includes(val));
+            if(filtered.length===0){dropdown.style.display='none';return;}
+            dropdown.innerHTML=filtered.map(t=>'<div class="tag-item" onclick="selectTagSuggestion(this,\''+escapeHtml(t)+'\')"><span>🏷 '+escapeHtml(t)+'</span></div>').join('');
+            dropdown.style.display='block';
+        }
+        function selectTagSuggestion(el,tag){
+            const wrap=el.closest('.io-name-wrap');
+            const input=wrap.querySelector('.io-name');
+            input.value=tag;
+            wrap.querySelector('.tag-dropdown').style.display='none';
+            // Focus next field
+            const row=wrap.parentElement;
+            const qty=row.querySelector('.io-qty');
+            if(qty)qty.focus();
+        }
+        function hideAllTagDropdowns(){
+            document.querySelectorAll('.tag-dropdown').forEach(d=>d.style.display='none');
+        }
+        function getExistingGroups(){
+            const groups=new Set();
+            recipes.forEach(r=>{if(r.group)groups.add(r.group);});
+            return Array.from(groups).sort();
+        }
+        function showGroupDropdown(){
+            const input=document.getElementById('recipeGroup');
+            const dropdown=document.getElementById('group-dropdown');
+            const val=input.value.trim().toLowerCase();
+            const allGroups=getExistingGroups();
+            if(allGroups.length===0){dropdown.style.display='none';return;}
+            const filtered=val?allGroups.filter(g=>g.toLowerCase().includes(val)):allGroups;
+            if(filtered.length===0){dropdown.style.display='none';return;}
+            dropdown.innerHTML=filtered.map(g=>'<div class="tag-item" onclick="selectGroupSuggestion(\''+escapeHtml(g)+'\')">📁 '+escapeHtml(g)+'</div>').join('');
+            dropdown.style.display='block';
+        }
+        function selectGroupSuggestion(name){
+            document.getElementById('recipeGroup').value=name;
+            document.getElementById('group-dropdown').style.display='none';
+        }
+
+        // Attach listeners to io-name inputs
+        function attachTagListeners(wrap){
+            const input=wrap.querySelector('.io-name');
+            const dropdown=wrap.querySelector('.tag-dropdown');
+            input.addEventListener('input',()=>showTagDropdown(wrap));
+            input.addEventListener('focus',()=>{if(input.value.trim())showTagDropdown(wrap);});
+            input.addEventListener('blur',()=>{setTimeout(()=>dropdown.style.display='none',200);});
+        }
+
+        // === ROWS ===
+        function makeInputRow(){
+            const r=document.createElement('div');r.className='io-row';
+            r.innerHTML='<div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div><input type="number" class="input-field qty io-qty" placeholder="Кол-во" step="any" min="0"><button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>';
+            attachTagListeners(r.querySelector('.io-name-wrap'));
+            return r;
+        }
+        function makeOutputRow(){
+            const r=document.createElement('div');r.className='io-row';
+            r.innerHTML='<div class="io-name-wrap"><input type="text" class="input-field io-name" placeholder="Название" autocomplete="off"><div class="tag-dropdown"></div></div><input type="number" class="input-field qty io-qty" placeholder="К-во" step="any" min="0"><input type="number" class="input-field chance io-chance" value="100" placeholder="%" step="any" min="0" max="100"><button class="btn btn-red btn-xs" style="flex:0 0 auto;" onclick="removeRow(this)" title="Удалить">✕</button>';
+            attachTagListeners(r.querySelector('.io-name-wrap'));
+            return r;
+        }
+        function addInputRow(){const c=document.getElementById('inputs-container');const row=makeInputRow();c.appendChild(row);}
+        function addOutputRow(){const c=document.getElementById('outputs-container');const row=makeOutputRow();c.appendChild(row);}
+        function removeRow(btn){const p=btn.closest('.io-section');if(p.querySelectorAll('.io-row').length>1)btn.parentElement.remove();}
+
+        // === COLLECT ===
+        function collectIO(containerId,hasChance){
+            const rows=document.querySelectorAll('#'+containerId+' .io-row');const items=[];
+            rows.forEach(row=>{const n=row.querySelector('.io-name').value.trim();const q=parseFloat(row.querySelector('.io-qty').value);const ch=hasChance?parseFloat(row.querySelector('.io-chance').value):100;if(n&&!isNaN(q)&&q>0){const chance=isNaN(ch)?100:Math.max(0,Math.min(100,ch));items.push({name:n,qty:q,chance:chance});}});
+            return items;
+        }
+
+        // === EDIT ===
+        function startEdit(index){
+            const r=recipes[index];editingIndex=index;
+            document.getElementById('recipeName').value=r.name;
+            document.getElementById('recipeGroup').value=r.group||'';
+            document.getElementById('recipeCraftType').value=r.craftType||'';
+            document.getElementById('recipeMachine').value=r.machineIndex!=null?String(r.machineIndex):'';
+            setSpeedMode('ticks');
+            document.getElementById('ticksInput').value=r.baseTicks.toFixed(2);
+            document.getElementById('speedInput').value=r.baseSpeed.toFixed(4);
+            document.getElementById('startTier').value=r.startTier;
+            document.getElementById('runningTier').value=r.runningTier;
+            document.getElementById('energyPerTick').value=r.energyPerTick;
+            document.getElementById('machineCount').value=r.machineCount||1;
+            fillIOContainer('inputs-container',r.inputs,false);
+            fillIOContainer('outputs-container',r.outputs,true);
+            document.getElementById('edit-banner').classList.add('visible');
+            document.getElementById('submit-btn').textContent='💾 Обновить рецепт';
+            document.getElementById('submit-btn').className='btn btn-blue';
+            document.getElementById('form-title').textContent='РЕДАКТИРОВАТЬ РЕЦЕПТ';
+            document.getElementById('form-dot').style.background='var(--accent-purple)';
+            document.getElementById('form-dot').style.boxShadow='0 0 6px var(--accent-purple)';
+            document.querySelectorAll('.recipe-card').forEach((c,i)=>c.classList.toggle('editing',i===index));
+            recalcTierEffects();
+            document.getElementById('form-panel').scrollIntoView({behavior:'smooth'});
+        }
+
+        function fillIOContainer(cid,items,hasChance){
+            const c=document.getElementById(cid);c.innerHTML='';
+            if(items.length===0){
+                const row=hasChance?makeOutputRow():makeInputRow();
+                c.appendChild(row);
+            }else{
+                items.forEach(it=>{
+                    const row=hasChance?makeOutputRow():makeInputRow();
+                    row.querySelector('.io-name').value=it.name;
+                    row.querySelector('.io-qty').value=it.qty;
+                    if(hasChance)row.querySelector('.io-chance').value=it.chance;
+                    c.appendChild(row);
+                });
+            }
+        }
+
+        function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+        function cancelEdit(){editingIndex=-1;clearFormFull();document.querySelectorAll('.recipe-card').forEach(c=>c.classList.remove('editing'));}
+
+        // === SUBMIT ===
+        function submitRecipe(){
+            const err=document.getElementById('form-error');err.style.display='none';
+            const name=document.getElementById('recipeName').value.trim();
+            const group=document.getElementById('recipeGroup').value.trim();
+            const baseSpeed=getBaseSpeed(),baseTicks=getBaseTicks();
+            const energyPerTick=parseFloat(document.getElementById('energyPerTick').value);
+            const startTier=parseInt(document.getElementById('startTier').value);
+            const runningTier=parseInt(document.getElementById('runningTier').value);
+            if(!name){showError('Введите название рецепта.');return;}
+            if(isNaN(baseSpeed)||baseSpeed<=0){showError('Введите корректную длительность в тиках или скорость.');return;}
+            if(isNaN(energyPerTick)||energyPerTick<0){showError('Введите энергию (EU/t).');return;}
+            if(runningTier<startTier){showError('Тир машины не может быть ниже начального.');return;}
+            const inputs=collectIO('inputs-container',false);
+            const outputs=collectIO('outputs-container',true);
+            if(inputs.length===0&&outputs.length===0){showError('Добавьте хотя бы один вход или выход.');return;}
+            const craftType=document.getElementById('recipeCraftType').value.trim();
+            const machineIdxRaw=document.getElementById('recipeMachine').value;
+            const machineIndex=machineIdxRaw!==''?parseInt(machineIdxRaw):null;
+            const rMachine=(machineIndex!=null&&machines[machineIndex])?machines[machineIndex]:null;
+            const msm=machineSpeedMult(rMachine),mem=machineEnergyMult(rMachine);
+            const tierDiff=runningTier-startTier;
+            const actualSpeed=baseSpeed*Math.pow(2,tierDiff)*msm;
+            const actualEnergyPerTick=energyPerTick*Math.pow(4,tierDiff)*mem;
+            const energyPerSecond=actualEnergyPerTick*20;
+            const machineCount=parseInt(document.getElementById('machineCount').value)||1;
+            const actualSpeedTotal=actualSpeed*machineCount;
+            const actualEnergyPerTickTotal=actualEnergyPerTick*machineCount;
+            const energyPerSecondTotal=actualEnergyPerTickTotal*20;
+            const disabled=editingIndex>=0?recipes[editingIndex].disabled:false;
+            const rd={name,group:group||'',craftType:craftType||'',machineIndex,machineSpeedMult:msm,machineEnergyMult:mem,baseTicks,baseSpeed,energyPerTick,startTier,runningTier,tierDiff,actualSpeed,machineCount,actualSpeedTotal,actualEnergyPerTick,actualEnergyPerTickTotal,energyPerSecond:energyPerSecondTotal,inputs,outputs,disabled};
+            if(editingIndex>=0){recipes[editingIndex]=rd;editingIndex=-1;document.querySelectorAll('.recipe-card').forEach(c=>c.classList.remove('editing'));}
+            else{recipes.push(rd);}
+            clearFormFull();renderAll();
+        }
+        function showError(m){const e=document.getElementById('form-error');e.textContent='⚠ '+m;e.style.display='block';setTimeout(()=>{e.style.display='none';},4000);}
+
+        // === CLEAR FORM ===
+        function clearFormFull(){
+            document.getElementById('recipeName').value='';document.getElementById('recipeGroup').value='';
+            document.getElementById('recipeCraftType').value='';document.getElementById('recipeMachine').value='';
+            document.getElementById('ticksInput').value='';document.getElementById('speedInput').value='';
+            document.getElementById('startTier').value='0';document.getElementById('runningTier').value='0';
+            document.getElementById('energyPerTick').value='';document.getElementById('machineCount').value='1';
+            const ic=document.getElementById('inputs-container');ic.innerHTML='';ic.appendChild(makeInputRow());
+            const oc=document.getElementById('outputs-container');oc.innerHTML='';oc.appendChild(makeOutputRow());
+            editingIndex=-1;document.getElementById('edit-banner').classList.remove('visible');
+            document.getElementById('submit-btn').textContent='✅ Добавить рецепт';document.getElementById('submit-btn').className='btn btn-green';
+            document.getElementById('form-title').textContent='ДОБАВИТЬ РЕЦЕПТ';
+            document.getElementById('form-dot').style.background='var(--accent-green)';document.getElementById('form-dot').style.boxShadow='0 0 6px var(--accent-green)';
+            document.querySelectorAll('.recipe-card').forEach(c=>c.classList.remove('editing'));
+            document.getElementById('form-error').style.display='none';setSpeedMode('ticks');
+            document.getElementById('comp-speed').textContent='—';document.getElementById('comp-eut').textContent='—';document.getElementById('comp-eus').textContent='—';
+            document.getElementById('comp-speed-mul').textContent='×1';document.getElementById('comp-energy-mul').textContent='×1';document.getElementById('comp-eus').classList.remove('warn');document.getElementById('comp-machines').textContent='1';
+        }
+
+        // === QUICK ADD ===
+        function ctxAddRecipe(){hideAllMenus();clearFormFull();const oc=document.getElementById('outputs-container');oc.innerHTML='';const row=makeOutputRow();row.querySelector('.io-name').value=ctxResourceName;row.querySelector('.io-qty').value='1';oc.appendChild(row);document.getElementById('form-panel').scrollIntoView({behavior:'smooth'});}
+        function ctxConsumeRecipe(){hideAllMenus();clearFormFull();const ic=document.getElementById('inputs-container');ic.innerHTML='';const row=makeInputRow();row.querySelector('.io-name').value=ctxResourceName;row.querySelector('.io-qty').value='1';ic.appendChild(row);document.getElementById('form-panel').scrollIntoView({behavior:'smooth'});}
+        function ctxAddTag(){
+            hideAllMenus();
+            document.getElementById('tag-dialog').style.display='block';
+            document.getElementById('tag-dialog').style.left=(event.clientX)+'px';
+            document.getElementById('tag-dialog').style.top=(event.clientY)+'px';
+            document.getElementById('tag-dialog-input').value='';
+            document.getElementById('tag-dialog-input').focus();
+            renderExistingTags();
+        }
+
+        function renderExistingTags(){
+            const list=document.getElementById('existing-tags-list');
+            const allTags=getAllTags();
+            const currentTags=getTagsForResource(ctxResourceName);
+            let html='';
+            if(currentTags.size>0){
+                html+='<div style="padding:8px 12px;font-size:7px;color:#aaa;">Теги этого ресурса:</div>';
+                Array.from(currentTags).sort().forEach(t=>{
+                    html+='<div class="tag-item" style="display:flex;justify-content:space-between;align-items:center;"><span style="cursor:pointer;" onclick="document.getElementById(\'tag-dialog-input\').value=\''+escapeHtml(t)+'\';applyTagFromDialog();">🏷 '+escapeHtml(t)+'</span><button class="btn btn-red btn-xs" style="font-size:5px;padding:2px 5px;" onclick="event.stopPropagation();removeTagFromResource(\''+escapeHtml(t)+'\');">✕</button></div>';
+                });
+            }
+            if(allTags.length>0){
+                html+='<div style="padding:8px 12px;font-size:7px;color:#aaa;">Все теги:</div>';
+                allTags.forEach(t=>{
+                    if(!currentTags.has(t)){
+                        html+='<div class="tag-item" onclick="document.getElementById(\'tag-dialog-input\').value=\''+escapeHtml(t)+'\';applyTagFromDialog();" style="cursor:pointer;">🏷 '+escapeHtml(t)+' <span class="tag-badge">сущ.</span></div>';
+                    }
+                });
+            }
+            if(!html){html='<div style="padding:8px 12px;font-size:7px;color:#555;">Нет существующих тегов</div>';}
+            list.innerHTML=html;
+        }
+        function removeTagFromResource(tag){
+            if(resourceTags[ctxResourceName]){
+                resourceTags[ctxResourceName].delete(tag);
+                if(resourceTags[ctxResourceName].size===0)delete resourceTags[ctxResourceName];
+                renderAll();
+                renderExistingTags();
+            }
+        }
+        function applyTagFromDialog(){
+            const tag=document.getElementById('tag-dialog-input').value.trim();
+            if(tag){addTagToResource(ctxResourceName,tag);renderAll();}
+            hideTagDialog();
+        }
+        function hideTagDialog(){document.getElementById('tag-dialog').style.display='none';}
+        function ctxClearTags(){
+            hideAllMenus();
+            if(resourceTags[ctxResourceName]&&resourceTags[ctxResourceName].size>0){
+                if(confirm('Удалить все теги с ресурса «'+ctxResourceName+'»?')){
+                    delete resourceTags[ctxResourceName];
+                    renderAll();
+                }
+            }
+        }
+
+        // === DELETE / CLEAR ===
+        function deleteRecipe(index){
+            if(confirm('Удалить рецепт «'+recipes[index].name+'»?')){if(editingIndex===index)cancelEdit();else if(editingIndex>index)editingIndex--;recipes.splice(index,1);renderAll();}
+        }
+        function toggleRecipe(index){
+            recipes[index].disabled=!recipes[index].disabled;
+            renderAll();
+        }
+        function toggleAllRecipes(){
+            if(recipes.length===0)return;
+            const allDisabled=recipes.every(r=>r.disabled);
+            recipes.forEach(r=>{r.disabled=!allDisabled;});
+            updateToggleAllBtn();
+            renderAll();
+        }
+        function updateToggleAllBtn(){
+            const btn=document.getElementById('toggle-all-btn');
+            if(!btn)return;
+            if(recipes.length===0){btn.style.display='none';return;}
+            const allDisabled=recipes.every(r=>r.disabled);
+            btn.textContent=allDisabled?'▶ Вкл. все':'⏸ Откл. все';
+            btn.className=allDisabled?'btn btn-sm btn-green':'btn btn-sm btn-orange';
+            btn.style.cssText='font-size:6px;padding:4px 8px;';
+        }
+        function toggleGroupRecipes(groupName){
+            const indices=[];
+            recipes.forEach((r,i)=>{if(r.group===groupName)indices.push(i);});
+            if(indices.length===0)return;
+            const allDisabled=indices.every(i=>recipes[i].disabled);
+            indices.forEach(i=>{recipes[i].disabled=!allDisabled;});
+            renderAll();
+        }
+        function clearAll(){if(confirm('Удалить ВСЕ рецепты?')){recipes=[];editingIndex=-1;document.querySelectorAll('.recipe-card').forEach(c=>c.classList.remove('editing'));updateToggleAllBtn();cancelEditMachine();renderAll();}}
+
+        // === EXPORT / IMPORT ===
+        function exportRecipes(){
+            if(recipes.length===0){alert('Нет рецептов для экспорта.');return;}
+            const data=JSON.stringify({recipes:recipes.map(r=>({name:r.name,group:r.group,craftType:r.craftType||'',machineIndex:r.machineIndex!=null?r.machineIndex:null,baseTicks:r.baseTicks,baseSpeed:r.baseSpeed,energyPerTick:r.energyPerTick,startTier:r.startTier,runningTier:r.runningTier,machineCount:r.machineCount||1,inputs:r.inputs,outputs:r.outputs,disabled:r.disabled||false})),machines:collectMachines(),resourceTags:resourceTags},null,2);
+            const blob=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gtnh_recipes_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+        }
+        function importRecipes(event){
+            const file=event.target.files[0];if(!file)return;
+            const reader=new FileReader();
+            reader.onload=function(e){
+                try{
+                    const data=JSON.parse(e.target.result);
+                    const arr=data.recipes||data;
+                    if(!Array.isArray(arr))throw new Error('Неверный формат');
+                    const imported=arr.map(r=>{
+                        const mc=r.machineCount||1;
+                        const rMachine=(r.machineIndex!=null&&machines[r.machineIndex])?machines[r.machineIndex]:null;
+                        const msm=machineSpeedMult(rMachine),mem=machineEnergyMult(rMachine);
+                        const as=(r.baseSpeed||1)*Math.pow(2,(r.runningTier||0)-(r.startTier||0))*msm;
+                        const ae=(r.energyPerTick||0)*Math.pow(4,(r.runningTier||0)-(r.startTier||0))*mem;
+                        return {
+                        name:r.name||'Без названия',group:r.group||'',craftType:r.craftType||'',
+                        machineIndex:r.machineIndex!=null?r.machineIndex:null,machineSpeedMult:msm,machineEnergyMult:mem,
+                        baseTicks:r.baseTicks||20,baseSpeed:r.baseSpeed||1,
+                        energyPerTick:r.energyPerTick||0,startTier:r.startTier||0,
+                        runningTier:r.runningTier||0,tierDiff:(r.runningTier||0)-(r.startTier||0),
+                        actualSpeed:as,machineCount:mc,actualSpeedTotal:as*mc,
+                        actualEnergyPerTick:ae,actualEnergyPerTickTotal:ae*mc,
+                        energyPerSecond:ae*mc*20,
+                        inputs:(r.inputs||[]).map(io=>({name:io.name||'?',qty:io.qty||1,chance:100})),
+                        outputs:(r.outputs||[]).map(io=>({name:io.name||'?',qty:io.qty||1,chance:io.chance!=null?io.chance:100})),
+                        disabled:r.disabled||false
+                    };});
+                    if(data.machines)loadMachines(data.machines);
+                    const msg=recipes.length>0?'Импортировать '+imported.length+' рецептов? Существующие ('+recipes.length+') будут ЗАМЕНЕНЫ.':'Импортировать '+imported.length+' рецептов?';
+                    if(confirm(msg)){
+                        recipes=imported;
+                        if(data.resourceTags)resourceTags=data.resourceTags;
+                        editingIndex=-1;renderAll();
+                    }
+                }catch(ex){alert('Ошибка импорта: '+ex.message);}
+            };
+            reader.readAsText(file);event.target.value='';
+        }
+
+        // === SEARCH ===
+        function filterSummary(){
+            const query=document.getElementById('search-input').value.trim().toLowerCase();
+            const rows=document.querySelectorAll('#summary-tbody tr');
+            let visible=0;
+            rows.forEach(row=>{
+                const nameCell=row.querySelector('td:first-child');
+                const tagsCell=row.querySelector('td:nth-child(2)');
+                const nameText=(nameCell?nameCell.textContent:'').toLowerCase();
+                const tagsText=(tagsCell?tagsCell.textContent:'');
+                const match=!query||nameText.includes(query)||tagsText.toLowerCase().includes(query);
+                row.classList.toggle('hidden',!match);
+                if(match)visible++;
+            });
+            document.getElementById('search-count').textContent=query?'Показано: '+visible+' / '+rows.length:'';
+            document.getElementById('no-results-msg').style.display=(query&&visible===0)?'block':'none';
+            document.getElementById('summary-empty').style.display=(rows.length===0)?'block':'none';
+        }
+
+        // === RENDER ===
+        function renderAll(){renderRecipeList();renderSummary();updateTreeDatalist();updateCraftTypeDatalist();}
+
+        function renderRecipeList(){
+            const listBody=document.getElementById('recipes-list-body');
+            const clearBody=document.getElementById('recipes-clear-body');
+            const clearBtn=document.getElementById('clear-all-btn');
+
+            if(recipes.length===0){
+                listBody.innerHTML='<p style="font-size:8px;color:#666;">Пока нет рецептов. Добавьте первый выше ↑</p>';
+                clearBtn.style.display='none';
+                updateToggleAllBtn();
+                return;
+            }
+            clearBtn.style.display='inline-block';
+            updateToggleAllBtn();
+
+            const groups={};const ungrouped=[];
+            recipes.forEach((r,i)=>{if(r.group){if(!groups[r.group])groups[r.group]=[];groups[r.group].push(i);}else ungrouped.push(i);});
+
+            let html='';
+            ungrouped.forEach(i=>{html+=renderOneRecipe(i);});
+            Object.keys(groups).sort().forEach(gname=>{
+                const indices=groups[gname];
+                const isEditingInGroup=indices.includes(editingIndex);
+                const collapsedClass=isEditingInGroup?'':'collapsed';
+                const disabledCount=indices.filter(i=>recipes[i].disabled).length;
+                const totalCount=indices.length;
+                let groupStateClass='';
+                if(disabledCount===totalCount)groupStateClass=' all-disabled';
+                else if(disabledCount>0)groupStateClass=' partial-disabled';
+                const allDisabled=disabledCount===totalCount;
+                const toggleBtnLabel=allDisabled?'▶ Включить всё':'⏸ Отключить всё';
+                const toggleBtnClass=allDisabled?'enable-all':'disable-all';
+                const statusStr=disabledCount>0?' ('+disabledCount+'/'+totalCount+' откл.)':'';
+                html+='<div class="group-header '+collapsedClass+groupStateClass+'" onclick="toggleGroup(this)"><span class="arrow">▼</span>📁 '+escapeHtml(gname)+'<span class="group-count">'+totalCount+' шт.'+statusStr+'</span><button class="group-toggle-btn '+toggleBtnClass+'" onclick="event.stopPropagation();toggleGroupRecipes('+escapeHtml(gname)+')" title="'+toggleBtnLabel+'">'+toggleBtnLabel+'</button></div>';
+                html+='<div class="group-body '+collapsedClass+'">';
+                indices.forEach(i=>{html+=renderOneRecipe(i);});
+                html+='</div>';
+            });
+            listBody.innerHTML=html;
+        }
+
+        function renderOneRecipe(i){
+            const r=recipes[i];
+            const st=TIERS[r.startTier],rt=TIERS[r.runningTier],stCss=TIER_CSS[r.startTier],rtCss=TIER_CSS[r.runningTier];
+            const tierStr=r.tierDiff===0?'<span class="tier-badge '+stCss+'">'+st+'</span>':'<span class="tier-badge '+stCss+'">'+st+'</span> → <span class="tier-badge '+rtCss+'">'+rt+'</span>';
+            const mc=r.machineCount||1;
+            const speedPer=r.actualSpeed.toFixed(4);
+            const speedTotal=r.actualSpeedTotal?r.actualSpeedTotal.toFixed(4):(r.actualSpeed*mc).toFixed(4);
+            const euPer=r.actualEnergyPerTick.toFixed(1);
+            const euTotal=r.actualEnergyPerTickTotal?r.actualEnergyPerTickTotal.toFixed(1):(r.actualEnergyPerTick*mc).toFixed(1);
+            const eusTotal=r.energyPerSecond.toFixed(1);
+            const speedLine=mc>1
+                ? '⏱ '+r.baseTicks.toFixed(1)+' тиков → ⚡ '+speedPer+' оп/с (×1) | 🖥 ×'+mc+' = <strong>'+speedTotal+' оп/с</strong>'
+                : '⏱ '+r.baseTicks.toFixed(1)+' тиков → ⚡ '+speedPer+' оп/с';
+            const euLine=mc>1
+                ? '🔌 '+tierStr+' &nbsp;|&nbsp; ⚡ '+euPer+' EU/t (×1) | 🖥 ×'+mc+' = <strong>'+euTotal+' EU/t</strong> &nbsp;('+eusTotal+' EU/s)'
+                : '🔌 '+tierStr+' &nbsp;|&nbsp; ⚡ '+euPer+' EU/t &nbsp;('+eusTotal+' EU/s)';
+            const speedForIO=r.actualSpeedTotal||(r.actualSpeed*mc);
+            const rMachine=getRecipeMachine(r);
+            const craftHtml=(r.craftType?'<span class="badge badge-craft">🧩 '+escapeHtml(r.craftType)+'</span>':'')
+                +(rMachine?'<span class="badge badge-machine">🏭 '+escapeHtml(rMachine.name)+'</span>':'');
+            const craftLine=craftHtml?'<div class="recipe-craft-line">'+craftHtml+(r.machineSpeedMult!=null&&r.machineSpeedMult!==1?'<span>⚡ ×'+r.machineSpeedMult+'</span>':'')+(r.machineEnergyMult!=null&&r.machineEnergyMult!==1?'<span>🔌 ×'+r.machineEnergyMult+'</span>':'')+'</div>':'';
+            const inputsStr=r.inputs.map(io=>'<li>🔴 '+escapeHtml(io.name)+': <strong>'+((io.qty)*speedForIO).toFixed(4)+'/с</strong> (×'+io.qty+')</li>').join('')||'<li style="color:#555;">—</li>';
+            const outputsStr=r.outputs.map(io=>'<li>🟢 '+escapeHtml(io.name)+': <strong>'+((io.qty*io.chance/100)*speedForIO).toFixed(4)+'/с</strong> (×'+io.qty+(io.chance<100?' шанс '+io.chance.toFixed(1)+'%':'')+')</li>').join('')||'<li style="color:#555;">—</li>';
+            return '<div class="recipe-card'+(editingIndex===i?' editing':'')+'"><div class="recipe-name">⚙ '+escapeHtml(r.name)+'</div>'+craftLine+'<div class="recipe-speed">'+speedLine+'</div><div class="recipe-tier">'+euLine+'</div><div class="recipe-io"><div><span class="badge badge-input">ВХОД</span><ul class="io-list">'+inputsStr+'</ul></div><div><span class="badge badge-output">ВЫХОД</span><ul class="io-list">'+outputsStr+'</ul></div></div><div class="actions"><button class="btn btn-blue btn-xs" onclick="startEdit('+i+')">✏️ Изменить</button><button class="btn btn-red btn-xs" onclick="deleteRecipe('+i+')">🗑 Удалить</button></div></div>';
+        }
+
+        function toggleSortByStatus(){
+            sortByStatus=!sortByStatus;
+            const btn=document.getElementById('sort-status-btn');
+            btn.textContent=sortByStatus?'📊 По алфавиту':'📊 По статусу';
+            renderSummary();
+        }
+        function toggleEnergyTable(){
+            const wrap=document.getElementById('energy-table-wrap');
+            const arrow=document.getElementById('energy-arrow');
+            const hint=arrow.parentElement.querySelector('span:last-child');
+            if(wrap.style.display==='none'){
+                wrap.style.display='block';
+                arrow.style.transform='rotate(0deg)';
+                if(hint)hint.textContent='(нажмите чтобы свернуть)';
+            }else{
+                wrap.style.display='none';
+                arrow.style.transform='rotate(-90deg)';
+                if(hint)hint.textContent='(нажмите чтобы развернуть)';
+            }
+        }
+        function toggleGroup(header){
+            header.classList.toggle('collapsed');
+            const body=header.nextElementSibling;
+            if(body)body.classList.toggle('collapsed');
+        }
+
+        // === RENDER SUMMARY ===
+        function renderSummary(){
+            const panel=document.getElementById('summary-panel'),tbody=document.getElementById('summary-tbody'),emptyMsg=document.getElementById('summary-empty'),energyDiv=document.getElementById('energy-summary'),energyTbody=document.getElementById('energy-tbody'),totalEusSpan=document.getElementById('total-eus');
+            if(recipes.length===0){panel.style.display='none';return;}
+            const enabledRecipes=recipes.filter(r=>!r.disabled);
+            panel.style.display='block';
+
+            const resMap={};
+                        enabledRecipes.forEach(r=>{
+                r.inputs.forEach(io=>{const s=r.actualSpeedTotal||(r.actualSpeed*(r.machineCount||1));if(!resMap[io.name])resMap[io.name]={consumed:0,produced:0};resMap[io.name].consumed+=io.qty*s;});
+                r.outputs.forEach(io=>{const s=r.actualSpeedTotal||(r.actualSpeed*(r.machineCount||1));if(!resMap[io.name])resMap[io.name]={consumed:0,produced:0};resMap[io.name].produced+=io.qty*(io.chance/100)*s;});
+            });
+
+            let sorted=Object.entries(resMap);
+            if(sortByStatus){
+                sorted.sort((a,b)=>{
+                    const netA=a[1].produced-a[1].consumed;
+                    const netB=b[1].produced-b[1].consumed;
+                    const statusA=netA<-0.0001?0:(netA>0.0001?2:1);
+                    const statusB=netB<-0.0001?0:(netB>0.0001?2:1);
+                    if(statusA!==statusB)return statusA-statusB;
+                    return a[0].localeCompare(b[0]);
+                });
+            }else{
+                sorted.sort((a,b)=>a[0].localeCompare(b[0]));
+            }
+            if(sorted.length===0){emptyMsg.style.display='block';tbody.innerHTML='';}
+            else{
+                emptyMsg.style.display='none';
+                let html='';
+                sorted.forEach(([name,data])=>{
+                    const net=data.produced-data.consumed;
+                    let nc='net-zero',si='🟡',st='Баланс';
+                    if(net>0.0001){nc='net-positive';si='🟢';st='Избыток';}else if(net<-0.0001){nc='net-negative';si='🔴';st='Дефицит';}
+                    const tags=getTagsForResource(name);
+                    const tagsHtml=tags.size>0?Array.from(tags).map(t=>'<span class="badge badge-tag" onclick="event.stopPropagation();removeResourceTag(\''+escapeHtml(name)+'\',\''+escapeHtml(t)+'\');" title="Нажмите чтобы удалить тег">'+escapeHtml(t)+'</span>').join(' '):'<span style="color:#444;">—</span>';
+                    html+='<tr><td><span class="resource-link" oncontextmenu="showContextMenu(event,\''+escapeHtml(name)+'\')" onclick="treeOpen(\''+escapeHtml(name)+'\')">'+escapeHtml(name)+'</span></td><td>'+tagsHtml+'</td><td>'+(data.consumed>0?data.consumed.toFixed(4):'—')+'</td><td>'+(data.produced>0?data.produced.toFixed(4):'—')+'</td><td class="'+nc+'">'+net.toFixed(4)+'</td><td>'+si+' '+st+'</td></tr>';
+                });
+                tbody.innerHTML=html;
+            }
+
+            let totalEus=0,ehtml='';
+            recipes.forEach(r=>{if(r.disabled)return;totalEus+=r.energyPerSecond;const rt=TIERS[r.runningTier],rtCss=TIER_CSS[r.runningTier];const eut=r.actualEnergyPerTickTotal||(r.actualEnergyPerTick*(r.machineCount||1));ehtml+='<tr><td>'+escapeHtml(r.name)+'</td><td><span class="tier-badge '+rtCss+'">'+rt+'</span></td><td>'+eut.toFixed(1)+'</td><td>'+r.energyPerSecond.toFixed(1)+'</td></tr>';});
+            if(enabledRecipes.length>0){energyDiv.style.display='block';totalEusSpan.textContent=totalEus.toFixed(1);energyTbody.innerHTML=ehtml;}else{energyDiv.style.display='none';}
+
+            // Re-apply search filter
+            filterSummary();
+        }
+
+        // === CONTEXT MENU ===
+        function showContextMenu(e,name){
+            e.preventDefault();
+            ctxResourceName=name;
+            const menu=document.getElementById('context-menu');
+            menu.style.display='block';menu.style.left=e.clientX+'px';menu.style.top=e.clientY+'px';
+            menu.querySelectorAll('.ctx-item')[0].textContent='➕ Добавить рецепт, производящий «'+name+'»';
+            menu.querySelectorAll('.ctx-item')[1].textContent='➕ Добавить рецепт, потребляющий «'+name+'»';
+            // Update tag item
+            const existing=getTagsForResource(name);
+            menu.querySelectorAll('.ctx-item')[2].textContent='🏷 Теги: '+(existing.size>0?Array.from(existing).join(', '):'нет')+' (изменить)';
+            const clearItem=document.getElementById('ctx-clear-tags');
+            if(clearItem)clearItem.style.display=existing.size>0?'block':'none';
+        }
+        function hideAllMenus(){
+            document.getElementById('context-menu').style.display='none';
+            document.getElementById('tag-dialog').style.display='none';
+        }
+        document.addEventListener('click',function(e){
+            if(!e.target.closest('.context-menu')&&!e.target.closest('.resource-link'))hideAllMenus();
+            if(!e.target.closest('#recipeGroup')&&!e.target.closest('#group-dropdown')){document.getElementById('group-dropdown').style.display='none';}
+            if(!e.target.closest('.io-name-wrap'))hideAllTagDropdowns();
+        });
+        document.addEventListener('scroll',hideAllMenus);
+
+        
+        // === RECIPE TREE ===
+        function treeResourceInputs(r){return (r.inputs||[]);}
+        function treeResourceOutputs(r){return (r.outputs||[]);}
+
+        function findProducers(resourceName){
+            return recipes.map((r,i)=>({r:r,idx:i})).filter(x=>!x.r.disabled && treeResourceOutputs(x.r).some(o=>o.name===resourceName));
+        }
+
+        function buildTree(resourceName, targetRate, stack, forcedRecipe){
+            stack=stack||[];
+            const producers=findProducers(resourceName);
+            if(producers.length===0){
+                return {type:'raw', name:resourceName, rate:targetRate};
+            }
+            if(stack.indexOf(resourceName)!==-1){
+                return {type:'cycle', name:resourceName, rate:targetRate};
+            }
+            const r=forcedRecipe||producers[0].r;
+            const out=treeResourceOutputs(r).find(o=>o.name===resourceName);
+            const runsPerSec=targetRate/(out.qty*(out.chance/100));
+            const recipeRate=runsPerSec*r.actualSpeed;
+            const machines=recipeRate>0?Math.ceil(recipeRate/(r.actualSpeedTotal||(r.actualSpeed*(r.machineCount||1)))):0;
+            const needs={};
+            treeResourceInputs(r).forEach(io=>{needs[io.name]=io.qty*runsPerSec;});
+            const byproducts=[];
+            treeResourceOutputs(r).forEach(o=>{
+                if(o.name===resourceName)return;
+                const oc=o.qty*(o.chance/100)*runsPerSec;
+                if(oc>1e-9)byproducts.push({name:o.name,rate:oc});
+            });
+            const newStack=stack.concat([resourceName]);
+            const children=Object.keys(needs).map(n=>({name:n, rate:needs[n], child:buildTree(n, needs[n], newStack)}));
+            return {type:'recipe', recipe:r, resource:resourceName, rate:targetRate, runsPerSec:runsPerSec, recipeRate:recipeRate, machines:machines, byproducts:byproducts, children:children, stack:newStack};
+        }
+
+        function treeCalc(){
+            const resName=document.getElementById('tree-resource-input').value.trim();
+            const rate=parseFloat(document.getElementById('tree-rate-input').value);
+            const cont=document.getElementById('tree-container');
+            const leafBox=document.getElementById('tree-leaves-summary');
+            leafBox.style.display='none';
+            if(!resName){cont.innerHTML='<div class="cycle-warn">⚠ Введите название ресурса.</div>';return;}
+            if(!rate||rate<=0||isNaN(rate)){cont.innerHTML='<div class="cycle-warn">⚠ Укажите корректную скорость производства (&gt; 0).</div>';return;}
+            const tree=buildTree(resName,rate,[]);
+            treeNodeId=0;
+            renderTree(tree,cont);
+            renderTreeLeaves(tree,leafBox);
+            updateTreeDatalist();
+        }
+
+        function renderTree(node,parentEl){
+            if(node.type==='raw'){
+                const div=document.createElement('div');
+                div.className='tree-node raw';
+                div.innerHTML='<div class="node-head"><span class="tree-toggle" style="visibility:hidden;">▸</span><span class="tree-resource">'+escapeHtml(node.name)+'</span><span class="tree-rate">'+formatRate(node.rate)+' ед/с</span><span class="tree-raw">🌿 сырьё</span></div>';
+                parentEl.appendChild(div);
+                return;
+            }
+            if(node.type==='cycle'){
+                const div=document.createElement('div');
+                div.className='tree-node';
+                div.innerHTML='<div class="node-head"><span class="tree-toggle" style="visibility:hidden;">▸</span><span class="tree-resource">'+escapeHtml(node.name)+'</span><span class="tree-rate">'+formatRate(node.rate)+' ед/с</span><span class="cycle-warn">⚠ цикл (рекурсия остановлена)</span></div>';
+                parentEl.appendChild(div);
+                return;
+            }
+            if(node.type==='recipe'){
+                const r=node.recipe;
+                const div=document.createElement('div');
+                div.className='tree-node';
+                div.innerHTML='<div class="node-head"><span class="tree-toggle" onclick="toggleTreeChildren(this)">▾</span><span class="tree-resource">'+escapeHtml(node.resource)+'</span><span class="tree-rate">'+formatRate(node.rate)+' ед/с</span><span class="tree-recipe">⚙ '+escapeHtml(r.name)+'</span><span class="tree-machines">'+node.machines+' маш.</span></div>';
+                const byps=node.byproducts||[];
+                if(byps.length){
+                    const bpDiv=document.createElement('div');
+                    bpDiv.className='tree-byproduct';
+                    bpDiv.innerHTML='🟢 Побочные продукты: '+byps.map(b=>escapeHtml(b.name)+' <strong>'+formatRate(b.rate)+'</strong>/с').join(', ');
+                    div.appendChild(bpDiv);
+                }
+                if(node.children&&node.children.length){
+                    const childWrap=document.createElement('div');
+                    childWrap.className='tree-children';
+                    node.children.forEach(ch=>{
+                        const producers=findProducers(ch.name);
+                        if(producers.length>1){
+                            const selRow=document.createElement('div');
+                            selRow.style.cssText='margin:6px 0 2px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:7px;';
+                            selRow.innerHTML='<span style="color:#888;">🔄 '+escapeHtml(ch.name)+' производится '+producers.length+' способами, выберите:</span>';
+                            const sel=document.createElement('select');
+                            sel.className='input-field tree-recipe-select';
+                            producers.forEach((p,pi)=>{
+                                const opt=document.createElement('option');
+                                opt.value=pi;
+                                opt.textContent=p.r.name;
+                                sel.appendChild(opt);
+                            });
+                            sel.addEventListener('change',function(){
+                                const box=selRow.nextElementSibling;
+                                box.innerHTML='';
+                                const chosen=producers[parseInt(sel.value)].r;
+                                const sub=buildTree(ch.name, ch.rate, node.stack, chosen);
+                                renderTree(sub,box);
+                            });
+                            selRow.appendChild(sel);
+                            childWrap.appendChild(selRow);
+                        }
+                        const box=document.createElement('div');
+                        childWrap.appendChild(box);
+                        renderTree(ch.child,box);
+                    });
+                    div.appendChild(childWrap);
+                }else{
+                    const emptyDiv=document.createElement('div');
+                    emptyDiv.className='tree-raw';
+                    emptyDiv.style.cssText='margin:4px 0 0 22px;font-size:7px;';
+                    emptyDiv.textContent='(нет входов — чистое производство)';
+                    div.appendChild(emptyDiv);
+                }
+                parentEl.appendChild(div);
+                return;
+            }
+        }
+
+        function toggleTreeChildren(toggle){
+            const ch=toggle.parentElement.nextElementSibling;
+            if(ch&&ch.classList.contains('tree-children')){
+                const collapsed=ch.classList.toggle('collapsed');
+                toggle.textContent=collapsed?'▸':'▾';
+            }
+        }
+
+        function formatRate(x){
+            if(x>=1000)return x.toFixed(1);
+            if(x>=10)return x.toFixed(2);
+            return x.toFixed(4).replace(/\.?0+$/,'');
+        }
+
+        function updateTreeDatalist(){
+            const dl=document.getElementById('tree-datalist');
+            if(!dl)return;
+            const names=new Set();
+            recipes.forEach(r=>{
+                treeResourceOutputs(r).forEach(o=>names.add(o.name));
+                treeResourceInputs(r).forEach(io=>names.add(io.name));
+            });
+            dl.innerHTML=Array.from(names).sort().map(n=>'<option value="'+escapeHtml(n)+'"></option>').join('');
+        }
+
+        function collectLeaves(node,acc){
+            if(!node)return acc;
+            if(node.type==='raw'){acc[node.name]=(acc[node.name]||0)+node.rate;return acc;}
+            if(node.type==='cycle')return acc;
+            if(node.type==='recipe'){node.children.forEach(ch=>collectLeaves(ch.child,acc));}
+            return acc;
+        }
+
+        function renderTreeLeaves(tree,el){
+            const acc={};
+            collectLeaves(tree,acc);
+            const entries=Object.entries(acc).sort((a,b)=>a[0].localeCompare(b[0]));
+            el.style.display=entries.length?'block':'none';
+            el.innerHTML='<div class="tree-leaves"><h4>🌿 НЕОБХОДИМОЕ СЫРЬЁ (итого)</h4>'+
+                entries.map(([n,rt])=>'<div class="leaf-row"><span class="leaf-name">'+escapeHtml(n)+'</span><span class="leaf-rate">'+formatRate(rt)+' ед/с</span></div>').join('')+
+                '</div>';
+        }
+
+        function treeOpen(resourceName){
+            const panel=document.getElementById('tree-panel');
+            if(panel&&panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth'});
+            document.getElementById('tree-resource-input').value=resourceName;
+            const rateInput=document.getElementById('tree-rate-input');
+            if(!rateInput.value||parseFloat(rateInput.value)<=0)rateInput.value='1';
+            treeCalc();
+        }
+
+        let treeNodeId=0;
+
+        
+        // === MACHINES ===
+        let machines=[];
+        let machineEditIndex=-1;
+
+        function machineSpeedMult(m){return (m&&m.speedMult&&m.speedMult>0)?m.speedMult:1;}
+        function machineEnergyMult(m){return (m&&m.energyMult&&m.energyMult>0)?m.energyMult:1;}
+
+        function getRecipeMachine(r){return (r&&r.machineIndex!=null&&machines[r.machineIndex])?machines[r.machineIndex]:null;}
+        function getCraftType(r){return (r&&r.craftType)?r.craftType:'';}
+
+        function saveMachine(){
+            const errEl=document.getElementById('machine-form-error');
+            if(errEl)errEl.style.display='none';
+            const name=document.getElementById('machineName').value.trim();
+            const sm=parseFloat(document.getElementById('machineSpeedMult').value);
+            const em=parseFloat(document.getElementById('machineEnergyMult').value);
+            if(!name){if(errEl){errEl.textContent='⚠ Введите название станка.';errEl.style.display='block';}return;}
+            if(isNaN(sm)||sm<=0){if(errEl){errEl.textContent='⚠ Множитель скорости должен быть > 0.';errEl.style.display='block';}return;}
+            if(isNaN(em)||em<=0){if(errEl){errEl.textContent='⚠ Множитель энергии должен быть > 0.';errEl.style.display='block';}return;}
+            const m={name:name,speedMult:sm,energyMult:em};
+            if(machineEditIndex>=0){
+                machines[machineEditIndex]=m;
+                machineEditIndex=-1;
+                document.getElementById('machine-submit-btn').textContent='➕ Добавить станок';
+                document.getElementById('machine-submit-btn').className='btn btn-green btn-sm';
+                document.getElementById('machine-cancel-btn').style.display='none';
+            }else{
+                machines.push(m);
+            }
+            document.getElementById('machineName').value='';
+            document.getElementById('machineSpeedMult').value='1';
+            document.getElementById('machineEnergyMult').value='1';
+            renderMachines();
+            updateRecipeMachineSelect();
+            renderAll();
+        }
+
+        function startEditMachine(i){
+            machineEditIndex=i;
+            const m=machines[i];
+            document.getElementById('machineName').value=m.name;
+            document.getElementById('machineSpeedMult').value=m.speedMult;
+            document.getElementById('machineEnergyMult').value=m.energyMult;
+            document.getElementById('machine-submit-btn').textContent='💾 Обновить станок';
+            document.getElementById('machine-submit-btn').className='btn btn-blue btn-sm';
+            document.getElementById('machine-cancel-btn').style.display='inline-block';
+            document.querySelectorAll('.machine-card').forEach((c,ci)=>c.classList.toggle('editing',ci===i));
+            const panel=document.getElementById('machines-panel');
+            if(panel&&panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth'});
+        }
+
+        function cancelEditMachine(){
+            machineEditIndex=-1;
+            document.getElementById('machineName').value='';
+            document.getElementById('machineSpeedMult').value='1';
+            document.getElementById('machineEnergyMult').value='1';
+            document.getElementById('machine-submit-btn').textContent='➕ Добавить станок';
+            document.getElementById('machine-submit-btn').className='btn btn-green btn-sm';
+            document.getElementById('machine-cancel-btn').style.display='none';
+            document.querySelectorAll('.machine-card').forEach(c=>c.classList.remove('editing'));
+        }
+
+        function deleteMachine(i){
+            if(!confirm('Удалить станок «'+machines[i].name+'»? Рецепты, назначенные на него, будут переведены на «Стандартный».'))return;
+            machines.splice(i,1);
+            recipes.forEach(r=>{
+                if(r.machineIndex===i)r.machineIndex=null;
+                else if(r.machineIndex>i)r.machineIndex--;
+            });
+            if(machineEditIndex===i)cancelEditMachine();
+            else if(machineEditIndex>i)machineEditIndex--;
+            renderMachines();
+            updateRecipeMachineSelect();
+            renderAll();
+        }
+
+        function renderMachines(){
+            const list=document.getElementById('machines-list');
+            if(!list)return;
+            if(machines.length===0){
+                list.innerHTML='<p style="font-size:7px;color:#555;">Станков пока нет. Создайте первый выше ↑</p>';
+                return;
+            }
+            list.innerHTML=machines.map((m,i)=>{
+                const usage=recipes.filter(r=>r.machineIndex===i&&!r.disabled).length;
+                const usageStr=usage>0?'Используется в '+usage+' рец.':'Не используется';
+                return '<div class="machine-card'+(machineEditIndex===i?' editing':'')+'">'
+                    +'<span class="mc-name">🏭 '+escapeHtml(m.name)+'</span>'
+                    +'<span class="mc-mult">⚡ ×'+m.speedMult+' скорости</span>'
+                    +'<span class="mc-mult">🔌 ×'+m.energyMult+' энергии</span>'
+                    +'<span class="mc-usage">'+usageStr+'</span>'
+                    +'<span class="mc-actions">'
+                    +'<button class="btn btn-blue btn-xs" onclick="startEditMachine('+i+')">✏️</button>'
+                    +'<button class="btn btn-red btn-xs" onclick="deleteMachine('+i+')">🗑</button>'
+                    +'</span></div>';
+            }).join('');
+        }
+
+        function updateRecipeMachineSelect(){
+            const sel=document.getElementById('recipeMachine');
+            if(!sel)return;
+            const current=sel.value;
+            let opts='<option value="">Стандартный (×1/×1)</option>';
+            machines.forEach((m,i)=>{
+                opts+='<option value="'+i+'"'+(String(i)===current?' selected':'')+'>'+escapeHtml(m.name)+' (×'+m.speedMult+'/×'+m.energyMult+')</option>';
+            });
+            sel.innerHTML=opts;
+            sel.value=current;
+        }
+
+        function updateCraftTypeDatalist(){
+            const dl=document.getElementById('crafttype-datalist');
+            if(!dl)return;
+            const names=new Set();
+            recipes.forEach(r=>{if(r.craftType)names.add(r.craftType);});
+            dl.innerHTML=Array.from(names).sort().map(n=>'<option value="'+escapeHtml(n)+'"></option>').join('');
+        }
+
+        function collectMachines(){
+            return machines.map(m=>({name:m.name,speedMult:m.speedMult,energyMult:m.energyMult}));
+        }
+
+        function loadMachines(arr){
+            machines=(Array.isArray(arr)?arr:[]).filter(m=>m&&m.name).map(m=>({name:String(m.name),speedMult:parseFloat(m.speedMult)||1,energyMult:parseFloat(m.energyMult)||1}));
+        }
+
+        // === INIT ===
+        renderMachines();
+        updateRecipeMachineSelect();
+        renderAll();
+        document.getElementById('ticksInput').addEventListener('input',()=>{if(speedMode==='ticks')autoCalcSpeed();else recalcTierEffects();});
+        document.getElementById('speedInput').addEventListener('input',()=>{if(speedMode==='speed')autoCalcTicks();else recalcTierEffects();});
+        document.getElementById('energyPerTick').addEventListener('input',recalcTierEffects);
+        document.getElementById('startTier').addEventListener('change',function(){const st=parseInt(this.value),rt=parseInt(document.getElementById('runningTier').value);if(rt<st)document.getElementById('runningTier').value=st;recalcTierEffects();});
+
+        // Attach tag listeners to initial rows
+        document.querySelectorAll('.io-name-wrap').forEach(attachTagListeners);
+    </script>
+</body>
+</html>

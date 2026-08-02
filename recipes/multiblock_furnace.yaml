@@ -1,0 +1,7 @@
+name: "Multiblock Furnace"
+time: 300
+basic_tier: lv
+eut: 0
+inputs:
+  steam: 16800
+outputs: {}

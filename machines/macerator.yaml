@@ -1,0 +1,6 @@
+name: "macerator"
+overclocks:
+  speed:
+    - 1
+    - 2
+    - 2

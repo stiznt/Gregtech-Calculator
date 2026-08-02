@@ -1,0 +1,9 @@
+name: "Diesel"
+time: 16
+basic_tier: mv
+eut: 120
+inputs:
+  heavy_fuel: 1000
+  light_fuel: 5000
+outputs:
+  diesel: 6000

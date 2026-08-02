@@ -1,0 +1,9 @@
+name: "Liquid Polyethylene"
+time: 160
+basic_tier: mv
+eut: 0
+inputs:
+  ethylene: 144
+  oxygen_gas: 1000
+outputs:
+  liquid_polyethylene: 216

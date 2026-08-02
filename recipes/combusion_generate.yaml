@@ -1,0 +1,7 @@
+name: "Combution Energy Generate"
+time: 15
+basic_tier: lv
+eut: 0
+inputs:
+  diesel: 1
+outputs: {}

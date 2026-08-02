@@ -1,0 +1,7 @@
+name: "Large Bronze Boiler"
+time: 1
+basic_tier: lv
+eut: 0
+inputs: {}
+outputs:
+  steam: 800
