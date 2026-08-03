@@ -22,11 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="/home/stiznt/gt_python/frontend", html=True))
+app.mount("/static", StaticFiles(directory="frontend/", html=True))
 
 @app.get("/")
 async def main():
-    return FileResponse("/home/stiznt/gt_python/frontend/index.html")
+    return FileResponse("frontend/index.html")
 
 @app.post("/add-recipe", status_code=200)
 async def add_recipe(recipe:Recipe):
