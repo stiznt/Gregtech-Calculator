@@ -46,7 +46,7 @@ recipes = [
     },
     {
         "name": "Light Fuel",
-        "time": 160,
+        "time": 16,
         "inputs":{
             "Sulfuric Light Fuel": 12000
         },
@@ -56,22 +56,54 @@ recipes = [
     },
     {
         "name": "Sulfuric Light Fuel",
-        "time": 40,
+        "time": 10,
         "inputs":{
-            "Heavy Oil": 100
+            "Raw Oil": 50
         },
         "outputs":{
-            "Sulfuric Light Fuel": 45
+            "Sulfuric Light Fuel": 25
         }
     },
     {
-        "name": "EU",
-        "time": 15,
-        "inputs": {
-            "Diesel": 4
+        "name": "Raw Oil",
+        "time": 30,
+        "inputs":{
+            "Lubricant": 100
         },
         "outputs":{
-            "EU": 1920
+            "Raw Oil": 1000
+        }
+    },
+    {
+            "name": "EU",
+            "time": 15,
+            "inputs": {
+                "Diesel": 4
+            },
+            "outputs":{
+                "EU": 1920
+            }
+    },
+    {
+        "name": "Lubricant",
+        "time": 128,
+        "inputs": {
+            "Redstone Dust": 1,
+            "Creosote": 1000
+        },
+        "outputs": {
+            "Lubricant": 1000
+        }
+    },
+    {
+        "name": "Creosote",
+        "time": 640,
+        "inputs": {
+            "Coal": 16
+        },
+        "outputs": {
+            "Coke": 16,
+            "Creosote": 8000
         }
     }
 ]

@@ -13,8 +13,16 @@ class RecipeOutputIngredient(Resource):
     quantity: int = Field(alias="quantity")
     chance: float = Field(alias="chance")
 
+class Group(BaseModel):
+    id: UUID6 = Field(default=uuid6(), alias="groupID")
+    name: str = Field(alias="groupName")
+
+class Type(BaseModel):
+    id: UUID6 = Field(default=uuid6(), alias="typeID")
+    name: str = Field(alias="typeName")
+
 class Recipe(BaseModel):
-    id: UUID6  = Field(default=uuid6(), alias="recipeID")
+    id: UUID6 = Field(default=uuid6(), alias="recipeID")
     name: str = Field(alias="recipeName")
     group_id: UUID6 = Field(alias="recipeGroupID")
     type_id: UUID6 = Field(alias="recipeTypeID")

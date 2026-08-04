@@ -43,15 +43,15 @@ async def add_resource(resource: Resource):
     return {"ID": id}
 
 @app.post("/api/add-group")
-async def add_group(name:str):
-    print("Add group:", name)
-    id = db.addGroup(name)
+async def add_group(data: Group):
+    print("Add group:", data.name)
+    id = db.addGroup(data)
     print("Group ID:", id)
     return {"ID": id}
 
 @app.post("/api/add-type")
-async def add_type(name:str):
-    print("Add type:", name)
-    id = db.addType(name)
+async def add_type(data:Type):
+    print("Add type:", data.name)
+    id = db.addType(data)
     print("Type ID:", id)
     return {"ID": id}
