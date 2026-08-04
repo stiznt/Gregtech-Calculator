@@ -12,12 +12,24 @@ class Database:
 
         self.createTables()
 
+    def pushDB(self, sql:str, data:list) -> None:
+
+        if(type(data[0]) in [list, tuple]):
+            self._cursor.executemany(sql, data)
+
+        self._cursor.execute(sql, data)
+
+        self._connection.commit()
+
+    def pullDB(self, sql: str, data:list) -> list:
+        self._cursor.execute(sql, data)
+        return self._cursor.fetchall()
+
     def addRecipe(self, recipe: Recipe):
 
         name = recipe.name
 
-        self._cursor.execute("SELECT * from Recipes WHERE name=?", (name,))
-        data = self._cursor.fetchall()
+        data = self.pullDB("SELECT * from Recipes WHERE name=?", (name, ))
 
         if(len(data) > 0):
             return
@@ -105,7 +117,7 @@ class Database:
         print("create tables")
         self._cursor.execute('''
             CREATE TABLE IF NOT EXISTS Recipes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id string PRIMARY KEY,
             name TEXT NOT NULL unique,
             group_id integer,
             type_id integer,

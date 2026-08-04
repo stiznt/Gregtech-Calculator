@@ -22,13 +22,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="frontend/", html=True))
+app.mount("/", StaticFiles(directory="frontend/", html=True))
 
-@app.get("/")
-async def main():
-    return FileResponse("frontend/index.html")
+# @app.get("/")
+# async def main():
+#     return FileResponse("frontend/index.html")
 
-@app.post("/add-recipe", status_code=200)
+@app.post("/api/add-recipe", status_code=200)
 async def add_recipe(recipe:Recipe):
     print(recipe)
     db.addRecipe(recipe)
