@@ -1,12 +1,17 @@
 import sqlite3
-from dtypes import Recipe
+from dtypes import *
+from uuid6 import UUID
 class Database:
 
     _connection : sqlite3.Connection
     _cursor: sqlite3.Cursor
 
     def __init__(self):
-        self._connection = sqlite3.connect("recipes.db")
+        
+        sqlite3.register_adapter(UUID, lambda u: u.bytes_le)
+        sqlite3.register_converter('UUID', lambda b: UUID(bytes_le=b))
+
+        self._connection = sqlite3.connect("recipes.db", detect_types=sqlite3.PARSE_DECLTYPES)
 
         self._cursor = self._connection.cursor()
 
@@ -18,97 +23,33 @@ class Database:
             self._cursor.executemany(sql, data)
 
         self._cursor.execute(sql, data)
-
         self._connection.commit()
 
     def pullDB(self, sql: str, data:list) -> list:
         self._cursor.execute(sql, data)
         return self._cursor.fetchall()
 
-    def addRecipe(self, recipe: Recipe):
+    def addRecipe(self, recipe: Recipe)->UUID6:
 
-        name = recipe.name
+        self.pushDB("INSERT OR IGNORE INTO Recipes (id, name, tier, group_id, type_id, duration, energy) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                    (recipe.id, recipe.name, recipe.tier, recipe.group_id, recipe.type_id, recipe.duration, recipe.energy))
 
-        data = self.pullDB("SELECT * from Recipes WHERE name=?", (name, ))
+        return self.pullDB("SELECT id FROM Recipes WHERE name=?", (recipe.name))[0]
 
-        if(len(data) > 0):
-            return
 
-        group_id = self.getGroupIDByName(recipe.group)
-        type_id = self.getTypeIDByName(recipe.type)
+    def addResource(self, resource: Resource) -> UUID6:
+        self.pushDB("INSERT OR IGNORE INTO Resources (id, name) VALUES (?, ?)", (resource.id, resource.name))
+        return self.pullDB("SELECT id FROM Resources WHERE name=?", (resource.name))[0]
 
-        duration = recipe.duration
-        energy = recipe.energy
+    def addGroup(self, name:str) -> UUID6:
+        self.pushDB("INSERT OR IGNORE INTO Groups (id, name) VALUES (?, ?)", [uuid6(), name])
+        return self.pullDB("SELECT id FROM Groups WHERE name=?", (name,))[0]
 
-        self._cursor.execute(
-            "INSERT INTO Recipes (name, group_id, type_id, duration, energy) VALUES (?, ?, ?, ?, ?)",
-            (name, group_id, type_id, duration, energy)
-        )
+    def addType(self, name:str) -> UUID6:
+        self.pushDB("INSERT OR IGNORE INTO Types (id, name) VALUES (?, ?)", [uuid6(), name])
+        return self.pullDB("SELECT id FROM Types WHERE name=?", (name,))[0]
 
-        recipe_id = self._cursor.lastrowid
-
-        resources = set()
-
-        resources.update(recipe.inputs.keys())
-        resources.update(recipe.outputs.keys())
-
-        resources = list(resources)
-
-        resource_to_id = self.resourcesToID(resources)
-
-        #add inputs
-        self._cursor.executemany(
-            "INSERT INTO Inputs (recipe_id, resource_id, quantity) VALUES (?, ?, ?)", 
-            [(recipe_id, resource_to_id[res], recipe.inputs[res]) for res in recipe.inputs]
-        )
-
-        self._cursor.executemany(
-            "INSERT INTO Outputs (recipe_id, resource_id, quantity, chance) VALUES (?, ?, ?, ?)", 
-            [(recipe_id, resource_to_id[res], recipe.outputs[res][0], recipe.outputs[res][1]) for res in recipe.outputs]
-        )
-               
-        self._connection.commit()
-
-    def resourcesToID(self, resources:list[str]) -> dict[str, int]:
-        res = {}
-
-        self._cursor.executemany("INSERT OR IGNORE INTO Resources(name) VALUES (?)", [(resource, ) for resource in resources])
-
-        placeholders = ', '.join("?" for _ in resources)
-        self._cursor.execute(f"SELECT id, name from Resources WHERE name in ({placeholders})", resources)
-
-        self._connection.commit()
-
-        for row in self._cursor.fetchall():
-            res[row[1]] = row[0]
-
-        return res
     
-    def getGroupIDByName(self, group:str) -> int:
-
-        self._cursor.execute("SELECT id FROM Groups WHERE name=?", (group,))
-        rows = self._cursor.fetchall()
-        if(len(rows) > 0):
-            return rows[0][0]
-
-        self._cursor.execute("INSERT INTO Groups (name) VALUES (?)", (group,))
-
-        self._connection.commit()
-
-        return self._cursor.lastrowid
-
-    def getTypeIDByName(self, type:str) -> int:
-        self._cursor.execute("SELECT id FROM Types WHERE name=?", (type,))
-        rows = self._cursor.fetchall()
-        if(len(rows) > 0):
-            return rows[0][0]
-
-        self._cursor.execute("INSERT INTO Types (name) VALUES (?)", (type,))
-
-        self._connection.commit()
-
-        return self._cursor.lastrowid
-
     def __del__(self):
         self._cursor.close()
         self._connection.close()
@@ -117,10 +58,11 @@ class Database:
         print("create tables")
         self._cursor.execute('''
             CREATE TABLE IF NOT EXISTS Recipes (
-            id string PRIMARY KEY,
+            id UUID PRIMARY KEY,
             name TEXT NOT NULL unique,
-            group_id integer,
-            type_id integer,
+            tier int not null,
+            group_id UUID not null,
+            type_id UUID not null,
             duration integer not null,
             energy integer not null
             )
@@ -128,21 +70,21 @@ class Database:
 
         self._cursor.execute('''
             CREATE TABLE IF NOT EXISTS Groups (
-                id integer primary key autoincrement,
+                id UUID primary key,
                 name text not null unique
             )
         ''')
 
         self._cursor.execute('''
             CREATE TABLE IF NOT EXISTS Types (
-                id integer primary key autoincrement,
+                id UUID primary key,
                 name text not null unique
             )
         ''')
 
         self._cursor.execute('''
             CREATE TABLE IF NOT EXISTS Resources (
-                id integer primary key autoincrement,
+                id UUID primary key,
                 name text not null unique
             )
         ''')

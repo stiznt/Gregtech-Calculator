@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from dataclasses import dataclass
 from fastapi.middleware.cors import CORSMiddleware
 from db import Database
-from dtypes import Recipe
+from dtypes import *
 app = FastAPI()
 db = Database()
 
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/", StaticFiles(directory="frontend/", html=True))
+# app.mount("/", StaticFiles(directory="frontend/", html=True))
 
 # @app.get("/")
 # async def main():
@@ -30,5 +30,28 @@ app.mount("/", StaticFiles(directory="frontend/", html=True))
 
 @app.post("/api/add-recipe", status_code=200)
 async def add_recipe(recipe:Recipe):
-    print(recipe)
-    db.addRecipe(recipe)
+    print("Recipe:", recipe)
+    id = db.addRecipe(recipe)
+    print("Recipe ID:", id)
+    return {"ID": id}
+
+@app.post("/api/add-resource")
+async def add_resource(resource: Resource):
+    print("Resource:", resource)
+    id = db.addResource(resource)
+    print("Resource ID:", id)
+    return {"ID": id}
+
+@app.post("/api/add-group")
+async def add_group(name:str):
+    print("Add group:", name)
+    id = db.addGroup(name)
+    print("Group ID:", id)
+    return {"ID": id}
+
+@app.post("/api/add-type")
+async def add_type(name:str):
+    print("Add type:", name)
+    id = db.addType(name)
+    print("Type ID:", id)
+    return {"ID": id}
