@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from fastapi.middleware.cors import CORSMiddleware
 from db import Database
 from dtypes import *
+from solver import Solver
 app = FastAPI()
 db = Database()
-
+solver = Solver()
 
 origins = [
     "http://localhost",
@@ -55,3 +56,28 @@ async def add_type(data:Type):
     id = db.addType(data)
     print("Type ID:", id)
     return {"ID": id}
+
+@app.post("/api/solver/add-recipe")
+async def solver_add_recipe(data: RecipeID):
+    print("Add to solver recipe with ID:", data)
+    solver.addRecipe(data)
+    return 200
+
+@app.post("/api/solver/set-fixed-recipe")
+async def solver_set_fixed(data: RecipeFixed):
+    print(f"Set {data.value} value to Recipe with ID:{data.id}")
+    solver.setFixed(data.id, data.value)
+
+@app.post("/api/add-recipe-inputs")
+async def add_recipe_inputs(data: RecipeInputs):
+    print("Add inputs for recipe: ", data.recipeID)
+    db.addRecipeInputs(data.recipeID, data.inputs)
+
+@app.post("/api/add-recipe-outputs")
+async def add_recipe_outputs(data: RecipeOutputs):
+    print("Add outputs for recipe: ", data.recipeID)
+    db.addRecipeOutputs(data.recipeID, data.outputs)
+
+@app.get("/api/solver/solve")
+async def solver_solve():
+    solver.solve()

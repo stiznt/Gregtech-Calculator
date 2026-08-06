@@ -51,7 +51,53 @@ class Database:
         self.pushDB("INSERT OR IGNORE INTO Types (id, name) VALUES (?, ?)", [str(type.id), type.name])
         return self.pullDB("SELECT id FROM Types WHERE name=?", (type.name,))[0][0]
 
-    
+    def getRecipe(self, recipeID: str) -> Recipe:
+        result = self.pullDB("SELECT * FROM Recipes WHERE id=?", (str(recipeID),))
+        if len(result) == 0:
+            return None
+        return Recipe(
+            recipeID=result[0][0],
+            recipeName=result[0][1],
+            recipeTier=result[0][2],
+            recipeGroupID=result[0][3],
+            recipeTypeID=result[0][4],
+            recipeDuration=result[0][5],
+            recipeEnergy=result[0][6]
+        )
+
+    def addRecipeInputs(self, recipeID: str, inputs: list[RecipeInputIngredient]):
+        for r in inputs:
+            resourceID = self.addResource(Resource(resourceID=r.id, resourceName=r.name))
+
+            temp = self.pullDB("SELECT id FROM Inputs WHERE recipe_id=? AND resource_id=?", (str(recipeID), resourceID))
+            if len(temp) > 0:
+                continue
+            self.pushDB("INSERT INTO Inputs (recipe_id, resource_id, quantity) VALUES (?, ?, ?)", (str(recipeID), resourceID, r.quantity))
+
+    def addRecipeOutputs(self, recipeID: str, outputs: list[RecipeOutputIngredient]):
+        for r in outputs:
+            resourceID = self.addResource(Resource(resourceID=r.id, resourceName=r.name))
+            
+            temp = self.pullDB("SELECT id FROM Outputs WHERE recipe_id=? AND resource_id=?", (str(recipeID), resourceID))
+            if len(temp)>0:
+                continue
+            self.pushDB("INSERT INTO Outputs (recipe_id, resource_id, quantity, chance) VALUES (?, ?, ?, ?)", (str(recipeID), resourceID, r.quantity, r.chance))
+
+    def getRecipeInputs(self, recipeID: str) -> list[RecipeInputIngredient]:
+        result = self.pullDB("SELECT Inputs.resource_id, Inputs.quantity, Resources.name FROM Inputs LEFT JOIN Resources ON Inputs.resource_id=Resources.id WHERE recipe_id=?", (str(recipeID), ))
+        res = []
+        for item in result:
+            res.append(RecipeInputIngredient(resourceID=item[0], quantity=item[1], resourceName=item[2]))
+        return res
+
+    def getRecipeOutputs(self, recipeID: str) -> list[RecipeOutputIngredient]:
+        result = self.pullDB("SELECT Outputs.resource_id, Outputs.quantity, Outputs.chance, Resources.name FROM Outputs LEFT JOIN Resources ON Outputs.resource_id=Resources.id WHERE recipe_id=?", (str(recipeID), ))
+        res = []
+        for item in result:
+            res.append(RecipeOutputIngredient(resourceID=item[0], resourceName=item[3], quantity=item[1], chance=item[2]))
+        return res
+        
+
     def __del__(self):
         self._cursor.close()
         self._connection.close()
