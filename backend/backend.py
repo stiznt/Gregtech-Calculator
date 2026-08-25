@@ -13,6 +13,7 @@ solver = Solver()
 origins = [
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:3000"
 ]
 
 app.add_middleware(
@@ -81,3 +82,26 @@ async def add_recipe_outputs(data: RecipeOutputs):
 @app.get("/api/solver/solve")
 async def solver_solve():
     solver.solve()
+
+@app.post("/api/add-recipe-v2")
+async def add_recipe_v2(data: RecipeV2):
+    print("Add recipe v2")
+
+    recipeTypeID = db.addType(Type(typeName=data.type_name))
+
+
+    recipeID = db.addRecipe(Recipe(
+        recipeName=data.name,
+        recipeGroupID=recipeTypeID,
+        recipeTypeID=recipeTypeID,
+        recipeDuration=data.duration,
+        recipeTier=data.tier,
+        recipeEnergy=data.energy
+    ))
+
+    db.addRecipeInputs(recipeID, data.inputs)
+    db.addRecipeOutputs(recipeID, data.outputs)
+
+    print("recipe v2 added")
+
+    

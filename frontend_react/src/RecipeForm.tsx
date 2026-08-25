@@ -1,5 +1,7 @@
 import { useState } from "react"
 
+const API_URL = "http://localhost:8000/api"
+
 type RecipeInputItem = {
     name: string,
     quantity: number
@@ -14,13 +16,12 @@ type RecipeOutputItem = {
 function RecipeForm(){
 
     const [recipeName, setRecipeName] = useState('');
-    const [recipeGroup, setRecipeGroup] = useState('');
     const [recipeType, setRecipeType] = useState('')
     const [recipeDuration, setRecipeDuration] = useState(0)
     const [recipeTier, setRecipeTier] = useState(1)
     const [recipeEnergy, setRecipeEnergy] = useState(0)
-    const [recipeInputs, setRecipeInputs] = useState<RecipeInputItem[]>(() => { const a:RecipeInputItem = {name: "", quantity: 0}; return [a];});
-    const [recipeOutputs, setRecipeOutputs] = useState<RecipeOutputItem[]>(() => {const a:RecipeOutputItem = {name: "", quantity: 0, chance: 100}; return [a]});
+    const [recipeInputs, setRecipeInputs] = useState<RecipeInputItem[]>([]);
+    const [recipeOutputs, setRecipeOutputs] = useState<RecipeOutputItem[]>([]);
 
     function changeRecipeInput(index: number, newName: string, newQuantity: number){
         const newRecipeInputs = [...recipeInputs];
@@ -54,8 +55,40 @@ function RecipeForm(){
         setRecipeOutputs(recipeOutputs.filter((item, i) => i !== index))
     }
 
-    function clearForm(){
+    async function addRecipe(){
 
+
+        const data = {
+            "recipeName": recipeName,
+            "recipeType": recipeType,
+            "recipeDuration": recipeDuration,
+            "recipeTier": recipeTier,
+            "recipeEnergy": recipeEnergy,
+            "recipeInputs": recipeInputs.map((item, index) => {
+                return {"resourceName": item.name, "quantity": item.quantity}
+            }),
+            "recipeOutputs": recipeOutputs.map( item => { return {"resourceName": item.name, "quantity": item.quantity, "chance": item.chance}})
+        }
+
+        fetch(API_URL + "/add-recipe-v2", {
+            method: "POST",
+            headers: {
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        }).then(responce => responce.json()).then(data => console.log(data))
+
+    }
+
+    function clearForm(){
+        setRecipeName("");
+        setRecipeType("");
+        setRecipeDuration(0)
+        setRecipeTier(1)
+        setRecipeEnergy(0)
+        setRecipeInputs([])
+        setRecipeOutputs([])
     }
 
     return (
@@ -63,10 +96,6 @@ function RecipeForm(){
                 <div className="form-item">
                     <label>Название рецепта</label>
                     <input value={recipeName} onChange={e => {setRecipeName(e.target.value);}}/>
-                </div>
-                <div className="form-item">
-                    <label>Группа</label>
-                    <input value={recipeGroup} onChange={e => {setRecipeGroup(e.target.value)}}/>
                 </div>
                 <div className="form-item">
                     <label>Вид крафта</label>
@@ -136,7 +165,7 @@ function RecipeForm(){
                 </div>
                 <div className="buttons">
                     <button onClick={() => clearForm()}>Очистить форму</button>
-                    <button>Добавить рецепт</button>
+                    <button onClick={() => addRecipe()}>Добавить рецепт</button>
                 </div>
         </div>
     )

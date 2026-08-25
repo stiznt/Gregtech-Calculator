@@ -56,3 +56,13 @@ class Recipe(BaseModel):
     duration: int = Field(alias="recipeDuration")
     tier: int = Field(alias="recipeTier")
     energy: int = Field(alias="recipeEnergy")
+
+class RecipeV2(BaseModel):
+    id: UUID6 = Field(default=uuid6(), alias="recipeID")
+    name: str = Field(alias="recipeName")
+    type_name: str = Field(alias="recipeType")
+    duration: int = Field(alias="recipeDuration")
+    tier: int = Field(alias="recipeTier")
+    energy: int = Field(alias="recipeEnergy")
+    inputs: list[RecipeInputIngredient] = Field(alias="recipeInputs")
+    outputs: list[RecipeOutputIngredient] = Field(alias="recipeOutputs")
