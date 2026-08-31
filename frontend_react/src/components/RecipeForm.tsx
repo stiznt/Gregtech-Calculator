@@ -2,12 +2,12 @@ import { useState } from "react"
 
 const API_URL = "http://localhost:8000/api"
 
-type RecipeInputItem = {
+export type RecipeInputItem = {
     name: string,
     quantity: number
 }
 
-type RecipeOutputItem = {
+export type RecipeOutputItem = {
     name: string,
     quantity: number,
     chance: number
@@ -55,8 +55,7 @@ function RecipeForm(){
         setRecipeOutputs(recipeOutputs.filter((item, i) => i !== index))
     }
 
-    async function addRecipe(){
-
+    function addRecipe(){
 
         const data = {
             "recipeName": recipeName,
@@ -74,10 +73,10 @@ function RecipeForm(){
             method: "POST",
             headers: {
                 "accept": "application/json",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(data)
-        }).then(responce => responce.json()).then(data => console.log(data))
+        }).then(responce => responce.json()).then(data => console.log("Done"))
 
     }
 

@@ -19,6 +19,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex="http://localhost*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,17 +52,18 @@ async def add_group(data: Group):
     print("Group ID:", id)
     return {"ID": id}
 
-@app.post("/api/add-type")
-async def add_type(data:Type):
-    print("Add type:", data.name)
-    id = db.addType(data)
-    print("Type ID:", id)
-    return {"ID": id}
+# @app.post("/api/add-type")
+# async def add_type(data:Type):
+#     print("Add type:", data.name)
+#     id = db.addType(data)
+#     print("Type ID:", id)
+#     return {"ID": id}
 
 @app.post("/api/solver/add-recipe")
 async def solver_add_recipe(data: RecipeID):
     print("Add to solver recipe with ID:", data)
     solver.addRecipe(data)
+    db.addRecipeToSolver(str(data.id))
     return 200
 
 @app.post("/api/solver/set-fixed-recipe")
@@ -104,4 +106,41 @@ async def add_recipe_v2(data: RecipeV2):
 
     print("recipe v2 added")
 
-    
+@app.get("/api/get-recipes")
+async def get_recipes():
+    recipes = db.getRecipes()
+    data = [{"id": recipe[0], "name": recipe[1]} for recipe in recipes]
+    return data
+
+@app.get("/api/solver/get-recipes")
+async def solver_get_recipes() -> list[SolverRecipe]:
+    recipes = db.getSolverRecipes()
+    result = []
+
+    for recipe in recipes:
+
+        inputs = db.getRecipeInputs(recipe[1])
+        inputs = list([SolverRecipeIngredient(resourceName=ingr.name, resourceQuantity=ingr.quantity) for ingr in inputs])
+        print(inputs)
+        outputs = db.getRecipeOutputs(recipe[1])
+        outputs = list([SolverRecipeIngredient(resourceName=ingr.name, resourceQuantity=ingr.quantity) for ingr in outputs])
+
+        result.append(SolverRecipe(
+            recipeID=recipe[1],
+            recipeName=recipe[4],
+            recipeEnergy=recipe[9],
+            recipeMult=recipe[2],
+            recipeInputs=inputs,
+            recipeOutputs=outputs
+        ))
+
+    # print(db.getSolverRecipes())
+    return result
+
+@app.delete("/api/solver/remove-recipe")
+async def solver_remove_recipe(data: RecipeID):
+    return db.removeSolverRecipe(str(data.id))
+
+@app.delete("/api/delete-recipe")
+async def delete_recipe(data: RecipeID):
+    return db.deleteRecipe(str(data.id))

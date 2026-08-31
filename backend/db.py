@@ -96,8 +96,32 @@ class Database:
         for item in result:
             res.append(RecipeOutputIngredient(resourceID=item[0], resourceName=item[3], quantity=item[1], chance=item[2]))
         return res
-        
 
+    def getRecipes(self):
+        return self.pullDB("SELECT id, name FROM Recipes", ())
+
+    def addRecipeToSolver(self, recipeID: str):
+        self.pushDB("INSERT OR IGNORE INTO Solver (id, recipe_id) VALUES (?, ?)", (str(uuid6()), recipeID))
+
+    def getSolverRecipes(self):
+        result = self.pullDB("Select * from Solver LEFT JOIN Recipes ON Solver.recipe_id=Recipes.id", ())
+        return result
+
+    def removeSolverRecipe(self, recipeID: str):
+        print("DELETE", recipeID)
+        self._cursor.execute("DELETE FROM Solver WHERE recipe_id=?", (recipeID,))
+        self._connection.commit()
+        return recipeID
+
+    def deleteRecipe(self, recipeID: str):
+        self._cursor.execute("DELETE FROM Recipes WHERE id=?", (recipeID,))
+        self._cursor.execute("DELETE FROM Solver WHERE id=?", (recipeID,))
+        self._cursor.execute("DELETE FROM Inputs WHERE recipe_id=?", (recipeID, ))
+        self._cursor.execute("DELETE FROM Outputs WHERE recipe_id=?", (recipeID, ))
+
+        self._connection.commit()
+        return recipeID
+    
     def __del__(self):
         self._cursor.close()
         self._connection.close()
@@ -155,4 +179,13 @@ class Database:
                 chance real not null
             )
         ''')
+
+        self._cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Solver (
+                id text primary key,
+                recipe_id  text not null unique,
+                mult integer default 0
+            )
+        ''')
+
         self._connection.commit()

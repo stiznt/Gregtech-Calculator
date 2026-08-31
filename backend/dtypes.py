@@ -66,3 +66,15 @@ class RecipeV2(BaseModel):
     energy: int = Field(alias="recipeEnergy")
     inputs: list[RecipeInputIngredient] = Field(alias="recipeInputs")
     outputs: list[RecipeOutputIngredient] = Field(alias="recipeOutputs")
+
+class SolverRecipeIngredient(BaseModel):
+    name: str = Field(alias="resourceName")
+    quantity: int = Field(alias="resourceQuantity")
+
+class SolverRecipe(BaseModel):
+    id: str = Field(default=uuid6(), alias="recipeID")
+    name: str = Field(alias="recipeName")
+    energy: int = Field(alias="recipeEnergy")
+    mult: int = Field(alias="recipeMult")
+    inputs: list[SolverRecipeIngredient] = Field(alias="recipeInputs")
+    outputs: list[SolverRecipeIngredient] = Field(alias="recipeOutputs")
